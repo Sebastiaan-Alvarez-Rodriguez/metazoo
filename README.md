@@ -41,26 +41,26 @@ All experiments (except perhaps first one):
 
 
 ## STEP 2
- - Pick two of these experiments. 
- - Write in your report why you chose them, why they are significant, where do you think the authors are wrong in their design, what you plan to do differently and why. (If you would not design the experiments differently, explain why.)
+ - [ ] Pick two of these experiments. 
+ - [ ] Write in your report why you chose them, why they are significant, where do you think the authors are wrong in their design, what you plan to do differently and why. (If you would not design the experiments differently, explain why.)
 
 |Experiment|Why|Significance|Design Mistakes|New|
 |---|---|---|---|---|
 |?|?|?|?|?|
 
 ## STEP 3
- - Run the two experiments in DAS-5. 
+ - [ ] Run the two experiments in DAS-5. 
     - Develop scripts to allocate and de-allocate nodes, 
     - develop scripts to run your experiments on the allocated nodes. 
     - Run the two experiments in two ways: 
         - (1) as the original authors described them; 
         - (2) as you describe at point 2). (In case you would not change the design of the experiments, you do not need to run the 2nd experiment.) 
- - Write in your report the choice of parameters for the experiments and how you designed your deployment and running scripts.
+ - [ ] Write in your report the choice of parameters for the experiments and how you designed your deployment and running scripts.
 
 ## STEP 4
- - Analyze the results you achieved. 
- - Write in your report whether the results you achieved are different to those of the authors and explain why. 
- - Draw graphs showing your results. (NB: similar results do not mean exactly matching the numbers the authors show, this is impossible, as the hardware is different. However, similar results mean similar trends, e.g., “system X is faster than system Y”, “system A is scaling linearly”.)
+ - [ ] Analyze the results you achieved. 
+ - [ ] Write in your report whether the results you achieved are different to those of the authors and explain why. 
+ - [ ] Draw graphs showing your results. (NB: similar results do not mean exactly matching the numbers the authors show, this is impossible, as the hardware is different. However, similar results mean similar trends, e.g., “system X is faster than system Y”, “system A is scaling linearly”.)
 
 ## STEP 5
- - Pack all your code and report (in pdf format) into a tarball, and upload it to Brightspace
+ - [ ] Pack all your code and report (in pdf format) into a tarball, and upload it to Brightspace
