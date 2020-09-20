@@ -12,13 +12,13 @@ Chubby is named very often, but I only saw one comparison, not even backed up by
  3. *"It is important to observe that all results that hold for linearizable objects also hold for A-linearizable objects because a system that satisfies A-linearizability also satisfies linearizability"*.  
 Uhm? Is it not the other way around then?
  4. I expected multiple (types of) primitives in experiments, but I believe they did not do that. They gave a reason, but I wonder if they should have done it... They also seem to give a reason without experiments to back it up.
- 5. since they replicate a lot, I wondered about memory, but this does not seem to be addressed.
- 6. *"Each znode in the tree stores amaximum of 1MB of data by default, but this maximumvalue is a configuration parameter that can be changed inspecific cases."*
- 7. *"...ZooKeeper is more than 3 times higher than the published throughput of Chubby"*.  
+ 5. since they replicate a lot, I wondered about memory, but this does not seem to be addressed. 
+    *"Each znode in the tree stores amaximum of 1MB of data by default, but this maximumvalue is a configuration parameter that can be changed inspecific cases."*
+ 6. *"...ZooKeeper is more than 3 times higher than the published throughput of Chubby"*.  
 I see no stats/ numbers?
- 8. They often have no repetitions
- 9. When they give average, they give nothing like standard deviation
- 10. The number of clients/ servers deviate a lot between experiments. Cherry picking?
+ 7. They often have no repetitions
+ 8. When they give average, they give nothing like standard deviation
+ 9. The number of clients/ servers deviate a lot between experiments. Cherry picking?
 
 Implementations:
  - ZooKeeper (API)
