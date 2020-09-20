@@ -2,8 +2,8 @@
 This file lists several steps to follow when making this project
 
 ## STEP 1
- - Read your chosen article carefully, trying to understand what experiments the authors have designed and why. 
- - Write in your report what experiments you identified in the article, what was the goal of the experiments, how they were conducted, on which kind of infrastructure, what dataset, what scale (number of machines), how many times experiments were repeated, what statistical methods were applied.
+ - [] Read your chosen article carefully, trying to understand what experiments the authors have designed and why. 
+ - [] Write in your report what experiments you identified in the article, what was the goal of the experiments, how they were conducted, on which kind of infrastructure, what dataset, what scale (number of machines), how many times experiments were repeated, what statistical methods were applied.
 
 ### Concerns/Ideas:
  1. *"The implementation is publicly available [here](http://hadoop.apache.org/zookeeper)"*
