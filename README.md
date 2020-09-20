@@ -51,11 +51,11 @@ All experiments (except perhaps first one):
 
 ## STEP 3
  - [ ] Run the two experiments in DAS-5. 
-    - Develop scripts to allocate and de-allocate nodes, 
-    - develop scripts to run your experiments on the allocated nodes. 
-    - Run the two experiments in two ways: 
-        - (1) as the original authors described them; 
-        - (2) as you describe at point 2). (In case you would not change the design of the experiments, you do not need to run the 2nd experiment.) 
+    - [ ] Develop scripts to allocate and de-allocate nodes, 
+    - [ ] develop scripts to run your experiments on the allocated nodes. 
+    - [ ] Run the two experiments in two ways: 
+        - [ ] (1) as the original authors described them; 
+        - [ ] (2) as you describe at point 2). (In case you would not change the design of the experiments, you do not need to run the 2nd experiment.) 
  - [ ] Write in your report the choice of parameters for the experiments and how you designed your deployment and running scripts.
 
 ## STEP 4
