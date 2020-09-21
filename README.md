@@ -11,7 +11,7 @@ The paper is available [here](https://static.usenix.org/event/atc10/tech/full_pa
  1. *"ZooKeeper seems to be Chubby without the lockmethods"*.  
 Chubby is named very often, but I only saw one comparison, not even backed up by numbers.
  2. *"It is important to observe that all results that hold for linearizable objects also hold for A-linearizable objects because a system that satisfies A-linearizability also satisfies linearizability"*.  
-Uhm? Is it not the other way around then?
+Uhm? Is it not the other way around then? **No, they state it correctly here**.
  3. I expected multiple (types of) primitives in experiments, but I believe they did not do that. They gave a reason, but I wonder if they should have done it... They also seem to give a reason without experiments to back it up.
  4. since they replicate a lot, I wondered about memory, but this does not seem to be addressed. 
     *"Each znode in the tree stores amaximum of 1MB of data by default, but this maximumvalue is a configuration parameter that can be changed inspecific cases."*
@@ -20,6 +20,13 @@ I see no stats/ numbers?
  6. They often have no repetitions
  7. When they give average, they give nothing like standard deviation
  8. The number of clients/ servers deviate a lot between experiments. Cherry picking?
+ 9. In figures 5/6 we are given a few lines showing throughput of the system with a varying percentage of read an write requests, where each line represents an amount of servers. It is unclear how each datapoint is formed: E.g. at '3 servers' line with 40% read requests the throughput is some number X. Is X the average? The highest value measured? If X is the average, what is the *variance* of the measurements?
+ 10. Table 1 gives some throughput performance statistics, but fails to mention whether it is an average amount of operations per second, or median, or just the best/worst measurements, and does not tell anything about variance
+ 11. In figure 7, we see the performance of broadcast halves when having a system scaling from 2 to 13 server nodes. Authors argue later on that there is CPU contention, since also serialization, client communication, ACL checks etc require CPU. This leads to think their system does not scale well when applied on a production-base with hundreds of servers. When thinking about it, the authors do not tell anything about the scalability of their system.
+ 12. In section 5.2, authors state they measure latency of requests with their own benchmark. It is not good practice to evaluate how well your framework works on your own benchmark
+ 13. Table 2 has 'create' requests per second, but does not tell if this is average, best results, worst results...
+ 14. Table 3 gives average time per second, but nothing on variance
+ 
 
 Implementations:
  - ZooKeeper (API)
