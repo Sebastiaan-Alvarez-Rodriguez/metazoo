@@ -4,7 +4,7 @@ The implementation is publicly available [here](http://hadoop.apache.org/zookeep
 The paper is available [here](https://static.usenix.org/event/atc10/tech/full_papers/Hunt.pdf)
 
 ## STEP 1
- - [ ] Read your chosen article carefully, trying to understand what experiments the authors have designed and why. 
+ - [x] Read your chosen article carefully, trying to understand what experiments the authors have designed and why. 
  - [ ] Write in your report what experiments you identified in the article, what was the goal of the experiments, how they were conducted, on which kind of infrastructure, what dataset, what scale (number of machines), how many times experiments were repeated, what statistical methods were applied.
 
 ### Concerns/Ideas:
