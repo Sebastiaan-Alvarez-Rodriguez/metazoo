@@ -49,7 +49,8 @@ All experiments (except perhaps first one):
 
 
 ## STEP 2
- - [ ] Pick two of these experiments. 
+ - [X] Pick two of these experiments.  
+Experiments picked: **Failures** and **Latency**.
  - [ ] Write in your report why you chose them, why they are significant, where do you think the authors are wrong in their design, what you plan to do differently and why. (If you would not design the experiments differently, explain why.)
 
 |Experiment|Why|Significance|Design Mistakes|New|
