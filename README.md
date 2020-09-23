@@ -55,8 +55,8 @@ Experiments picked: **Failures** and **Latency**.
 
 |Experiment|Why|Significance|Design Mistakes|New|
 |---|---|---|---|---|
-|?|?|?|?|?|
-|?|?|?|?|?|
+|Failures|Interesting topic, but experiment was poor|Failures are unavoidable, thus knowing how a system reacts is crucial | No repetitions, thus very short time period. Only used 5 machines without any explanation. No statistical methods. | Run with multiple amounts of machines, repeat experiment [20-100] times and use statistical methods; use time delta to measure impact using median (perhaps bimodal since we have different situations), and percentiles |
+|Latency|Least trustworthy and boldest statements|Latency is used most often to test these systems, so having good experiments is essential| Authors used own benchmark, they compare with other benchmark. No information on Chubby. They assumed every worker is equal in speed. No repetitions. No statistical methods. | Find a good benchmark or use the one for Chubby. Run the Chubby experiment on our own under same circumstances as ZooKeeper. 'Average' throughput per worker (with stdev and/or percentiles). Repeat experiment [20-100] times. |
 
 ## STEP 3
  - [ ] Run the two experiments in DAS-5. 
