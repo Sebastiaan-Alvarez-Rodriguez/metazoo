@@ -38,13 +38,13 @@ All experiments (except perhaps first one):
 
 |Experiment|Goal|How|Dataset|repetitions|statistical methods|Scale (if different)|
 |---|---|---|---|---|---|---|
-|Figure 2|Workload for 3 days used by FS|count #operations every second|Fetching Service (Yahoo) (not really dataset)|1 (no reps)|frequencies?|?|
-|Throughput|Measure Throughput for saturated systems or injected failures|java server to log to disk, snapshot to another. async Java client API 100 requests outstanding, with read or write of 1K data. Clients send counts of completed operations every 300 ms, they sample every 6s|?|1|frequencies?|35 machines to simulate 250 simultaneous clients|
-|Throughput 2|Show what happens if using no relaxation and force clients to only connect to leader|Use no relaxation|...|1|frequencies|-|
-|Atomic Broadcast|Measure Atomic Broadcast throughput|simulate clients by generating transactions directly to leader|...|1|Average + min, max value|-|
-|Failures|Measure Throughput when Failures|Use same saturation benchmark, but keep write percentage at constant 30%. Periodically kill some of server processes|...|1|Frequencies|5 machines|
-|Latency|Assess latency of requests|worker process sends a create, waits for finish, sends asynchronous delete and starts new create. Each worker creates 50 000 nodes.|...|1|throughput = no. requests completed / total time to complete|3, 5, 7, 9 servers combined with 1, 10, 20 workers|
-|Barriers|Measures performance of barriers|each client enters all b barriers, en then leaves all of them|..|5|Average|50, 100, 200 clients|
+|Workload|Workload for 3 days used by FS|count #operations every second|Fetching Service (Yahoo) (not really dataset)|0 (no reps)|frequencies|?|
+|Throughput|Measure Throughput for saturated systems or injected failures|java server to log to disk, snapshot to another. async Java client API 100 requests outstanding, with read or write of 1K data. Clients send counts of completed operations every 300 ms, they sample every 6s|?|0|Not given|35 machines to simulate 250 simultaneous clients|
+|Throughput 2|Show what happens if using no relaxation and force clients to only connect to leader|Use no relaxation|?|0|frequencies|Presumably the same as 'Throughput' experiment|
+|Atomic Broadcast|Measure Atomic Broadcast throughput|simulate clients by generating transactions directly to leader|?|0|Average and min, max|-|
+|Failures|Measure Throughput when Failures|Use same saturation benchmark, but keep write percentage at constant 30%. Periodically kill some of server processes|?|0|None|5 machines|
+|Latency|Assess latency of requests|worker process sends a create, waits for finish, sends asynchronous delete and starts new create. Each worker creates 50.000 nodes|Their own fabrication|0|throughput = #requests completed / total time to complete|3, 5, 7, 9 servers combined with 1, 10, 20 workers|
+|Barriers|Measures performance of barriers|each client enters all b barriers, en then leaves all of them|?|4|Average|50, 100, 200 clients|
 
 
 
