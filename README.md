@@ -60,8 +60,12 @@ Experiments picked: **Failures** and **Latency**.
 
 ## STEP 3
  - [ ] Run the two experiments in DAS-5. 
-    - [ ] Develop scripts to allocate and de-allocate nodes, 
-    - [ ] develop scripts to run your experiments on the allocated nodes. 
+    <!--- [ ] Develop scripts to allocate and de-allocate nodes, -->
+    1. Write script to allocate nodes with preserve
+    2. Write script which fetches ip adresses for allocated nodes (e.g. ip adress of 'node112')
+    3. Think of a way to install zookeeper on nodes
+    4. Think of a way to tell zookeeper instances were the other instances live
+    <!--- [ ] develop scripts to run your experiments on the allocated nodes. -->
     - [ ] Run the two experiments in two ways: 
         - [ ] (1) as the original authors described them; 
         - [ ] (2) as you describe at point 2). (In case you would not change the design of the experiments, you do not need to run the 2nd experiment.) 
