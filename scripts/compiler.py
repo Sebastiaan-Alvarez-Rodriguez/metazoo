@@ -66,8 +66,8 @@ def compile():
     if check(print_success=False) != 0:
         print('[FAILURE] Cannot compile due to system errors')
         return 1
-    if not os.path.isdir('zookeeper-release-3.3.0'):
-        print('[FAILURE] Could not find {0}/zookeeper-release-3.3.0/'.format(os.getcwd()))
+    if not os.path.isdir('../zookeeper-release-3.3.0'):
+        print('[FAILURE] Could not find {0}/../zookeeper-release-3.3.0/'.format(os.getcwd()))
         return 1
 
     statuscode = os.system('cd ../zookeeper-release-3.3.0 && ant binary && cd ..')
