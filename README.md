@@ -1,7 +1,8 @@
 # Zookeeper
 This file lists several steps to follow when making this project.  
 The implementation is publicly available [here](http://hadoop.apache.org/zookeeper).  
-The paper is available [here](https://static.usenix.org/event/atc10/tech/full_papers/Hunt.pdf)
+The paper is available [here](https://static.usenix.org/event/atc10/tech/full_papers/Hunt.pdf).  
+Chubby paper is available [here](https://static.googleusercontent.com/media/research.google.com/en//archive/chubby-osdi06.pdf).
 
 ## STEP 1
  - [x] Read your chosen article carefully, trying to understand what experiments the authors have designed and why. 
