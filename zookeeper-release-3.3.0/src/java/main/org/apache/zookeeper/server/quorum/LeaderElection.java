@@ -158,7 +158,7 @@ public class LeaderElection implements Election  {
             int xid = epochGen.nextInt();
             while (self.isRunning()) {
                 votes.clear();
-                requestBuffer.clear();
+                ((java.nio.Buffer)requestBuffer).clear();
                 requestBuffer.putInt(xid);
                 requestPacket.setLength(4);
                 HashSet<Long> heardFrom = new HashSet<Long>();
@@ -185,7 +185,7 @@ public class LeaderElection implements Election  {
                                     + responsePacket.getLength());
                             continue;
                         }
-                        responseBuffer.clear();
+                        ((java.nio.Buffer)responseBuffer).clear();
                         int recvedXid = responseBuffer.getInt();
                         if (recvedXid != xid) {
                             LOG.error("Got bad xid: expected " + xid

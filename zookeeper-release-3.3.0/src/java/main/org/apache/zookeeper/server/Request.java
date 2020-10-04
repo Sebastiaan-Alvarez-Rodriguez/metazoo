@@ -202,7 +202,7 @@ public class Request {
             try {
                 // make sure we don't mess with request itself
                 ByteBuffer rbuf = request.asReadOnlyBuffer();
-                rbuf.clear();
+                ((java.nio.Buffer)rbuf).clear();
                 int pathLen = rbuf.getInt();
                 // sanity check
                 if (pathLen >= 0

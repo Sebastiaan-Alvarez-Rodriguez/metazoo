@@ -91,7 +91,7 @@ public class LENonTerminateTest extends TestCase {
             int xid = epochGen.nextInt();
             while (self.isRunning()) {
                 votes.clear();
-                requestBuffer.clear();
+                ((java.nio.Buffer)requestBuffer).clear();
                 requestBuffer.putInt(xid);
                 requestPacket.setLength(4);
                 HashSet<Long> heardFrom = new HashSet<Long>();
@@ -118,7 +118,7 @@ public class LENonTerminateTest extends TestCase {
                                     + responsePacket.getLength());
                             continue;
                         }
-                        responseBuffer.clear();
+                        ((java.nio.Buffer)responseBuffer).clear();
                         int recvedXid = responseBuffer.getInt();
                         if (recvedXid != xid) {
                             LOG.error("Got bad xid: expected " + xid
@@ -370,7 +370,7 @@ public class LENonTerminateTest extends TestCase {
             responseBuffer.rewind();
             LOG.info("Received " + responseBuffer.getInt() + " " + responseBuffer.getLong() + " " + responseBuffer.getLong());
             LOG.info("From " + packet.getSocketAddress());
-            responseBuffer.clear();
+            ((java.nio.Buffer)responseBuffer).clear();
             responseBuffer.getInt(); // Skip the xid
             responseBuffer.putLong(2);
             

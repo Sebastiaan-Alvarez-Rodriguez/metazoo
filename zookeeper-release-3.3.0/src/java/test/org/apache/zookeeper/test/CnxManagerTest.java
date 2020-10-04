@@ -87,7 +87,7 @@ public class CnxManagerTest extends TestCase {
          * Building notification packet to send
          */
                 
-        requestBuffer.clear();
+        ((java.nio.Buffer)requestBuffer).clear();
         requestBuffer.putInt(state);
         requestBuffer.putLong(leader);
         requestBuffer.putLong(zxid);

@@ -93,7 +93,7 @@ stop)
     fi
     ;;
 upgrade)
-    exit(0)
+    exit
     shift
     echo "upgrading the servers to 3.*"
     java "-Dzookeeper.log.dir=${ZOO_LOG_DIR}" "-Dzookeeper.root.logger=${ZOO_LOG4J_PROP}" \

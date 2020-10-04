@@ -77,7 +77,7 @@ public class TraceFormatter {
         while (true) {
             ByteBuffer bb = ByteBuffer.allocate(41);
             fc.read(bb);
-            bb.flip();
+            ((java.nio.Buffer)bb).flip();
 
             byte app = bb.get();
             long time = bb.getLong();
@@ -89,7 +89,7 @@ public class TraceFormatter {
             int len = bb.getInt();
             bb = ByteBuffer.allocate(len);
             fc.read(bb);
-            bb.flip();
+            ((java.nio.Buffer)bb).flip();
             String path = "n/a";
             if (bb.remaining() > 0) {
                 if (type != OpCode.createSession) {

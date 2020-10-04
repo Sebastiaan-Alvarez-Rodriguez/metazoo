@@ -457,13 +457,13 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
 
         if (incomingBuffer.remaining() == 0) { // have we read length bytes?
             packetReceived();
-            incomingBuffer.flip();
+            ((java.nio.Buffer)incomingBuffer).flip();
             if (!initialized) {
                 readConnectRequest();
             } else {
                 readRequest();
             }
-            lenBuffer.clear();
+            ((java.nio.Buffer)lenBuffer).clear();
             incomingBuffer = lenBuffer;
         }
     }
@@ -487,9 +487,9 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                 if (incomingBuffer.remaining() == 0) {
                     boolean isPayload;
                     if (incomingBuffer == lenBuffer) { // start of next request
-                        incomingBuffer.flip();
+                        ((java.nio.Buffer)incomingBuffer).flip();
                         isPayload = readLength(k);
-                        incomingBuffer.clear();
+                        ((java.nio.Buffer)incomingBuffer).clear();
                     } else {
                         // continuation
                         isPayload = true;
@@ -517,7 +517,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                      * send.
                      */
                     ByteBuffer directBuffer = factory.directBuffer;
-                    directBuffer.clear();
+                    ((java.nio.Buffer)directBuffer).clear();
 
                     for (ByteBuffer b : outgoingBuffers) {
                         if (directBuffer.remaining() < b.remaining()) {
@@ -547,7 +547,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                      * Do the flip: limit becomes position, position gets set to
                      * 0. This sets us up for the write.
                      */
-                    directBuffer.flip();
+                    ((java.nio.Buffer)directBuffer).flip();
 
                     int sent = sock.write(directBuffer);
                     ByteBuffer bb;
@@ -986,7 +986,7 @@ public class NIOServerCnxn implements Watcher, ServerCnxn {
                     throw new IOException("Read error");
                 }
 
-                incomingBuffer.flip();
+                ((java.nio.Buffer)incomingBuffer).flip();
                 long traceMask = incomingBuffer.getLong();
                 ZooTrace.setTextTraceLevel(traceMask);
                 pwriter.print(traceMask);

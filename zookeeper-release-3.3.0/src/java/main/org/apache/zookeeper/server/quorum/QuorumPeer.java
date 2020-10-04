@@ -262,7 +262,7 @@ public class QuorumPeer extends Thread implements QuorumStats.Provider {
                         LOG.warn("Got more than just an xid! Len = "
                                 + packet.getLength());
                     } else {
-                        responseBuffer.clear();
+                        ((java.nio.Buffer)responseBuffer).clear();
                         responseBuffer.getInt(); // Skip the xid
                         responseBuffer.putLong(myid);
                         Vote current = getCurrentVote();

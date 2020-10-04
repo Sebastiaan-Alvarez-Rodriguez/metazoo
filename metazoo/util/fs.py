@@ -55,13 +55,15 @@ def ls(directory, only_files=False, only_dirs=False, full_paths=False, *args):
     if only_files and only_dirs:
         raise ValueError('Cannot ls only files and only directories')
 
-    with os.scandir(directory) as it:
-        for entry in it:
-            if entry.is_dir() and not only_files:
-                yield join(directory, entry.name) if full_paths else entry.name 
-            elif entry.is_file() and not only_dirs:
-                yield join(directory, entry.name) if full_paths else entry.name 
-
+    if sys.version_info >= (3, 5): # Use faster implementation in python 3.5 and above
+        with os.scandir(directory) as it:
+            for entry in it:
+                if (entry.is_dir() and not only_files) or (entry.is_file() and not only_dirs):
+                    yield join(directory, entry.name) if full_paths else entry.name
+    else: # Use significantly slower implementation available in python 3.4 and below
+        for entry in os.listdir(directory):
+            if (isdir(directory, entry) and not only_files) or (isfile(directory, entry) and not only_dirs):
+                yield join(directory, entry) if full_paths else entry
 
 def mkdir(path, *args, exist_ok=False):
     os.makedirs(join(path, *args), exist_ok=exist_ok)

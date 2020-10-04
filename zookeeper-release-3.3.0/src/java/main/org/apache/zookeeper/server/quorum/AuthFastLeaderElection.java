@@ -237,7 +237,7 @@ public class AuthFastLeaderElection implements Election {
                 while (true) {
                     // Sleeps on receive
                     try {
-                        responseBuffer.clear();
+                        ((java.nio.Buffer)responseBuffer).clear();
                         mySocket.receive(responsePacket);
                     } catch (IOException e) {
                         LOG.warn("Ignoring exception receiving", e);
@@ -249,7 +249,7 @@ public class AuthFastLeaderElection implements Election {
                                 + responsePacket.toString());
                         continue;
                     }
-                    responseBuffer.clear();
+                    ((java.nio.Buffer)responseBuffer).clear();
                     int type = responseBuffer.getInt();
                     if ((type > 3) || (type < 0)) {
                         LOG.warn("Got bad Msg type: " + type);
@@ -450,7 +450,7 @@ public class AuthFastLeaderElection implements Election {
                     /*
                      * Building challenge request packet to send
                      */
-                    requestBuffer.clear();
+                    ((java.nio.Buffer)requestBuffer).clear();
                     requestBuffer.putInt(ToSend.mType.crequest.ordinal());
                     requestBuffer.putLong(m.tag);
                     requestBuffer.putInt(m.state.ordinal());
@@ -493,7 +493,7 @@ public class AuthFastLeaderElection implements Election {
 
                     addrChallengeMap.get(m.addr).put(m.tag, newChallenge);
 
-                    requestBuffer.clear();
+                    ((java.nio.Buffer)requestBuffer).clear();
                     requestBuffer.putInt(ToSend.mType.challenge.ordinal());
                     requestBuffer.putLong(m.tag);
                     requestBuffer.putInt(m.state.ordinal());
@@ -528,7 +528,7 @@ public class AuthFastLeaderElection implements Election {
                      * Building notification packet to send
                      */
 
-                    requestBuffer.clear();
+                    ((java.nio.Buffer)requestBuffer).clear();
                     requestBuffer.putInt(m.type);
                     requestBuffer.putLong(m.tag);
                     requestBuffer.putInt(m.state.ordinal());
@@ -657,7 +657,7 @@ public class AuthFastLeaderElection implements Election {
                     break;
                 case 3:
 
-                    requestBuffer.clear();
+                    ((java.nio.Buffer)requestBuffer).clear();
                     requestBuffer.putInt(m.type);
                     requestBuffer.putLong(m.tag);
                     requestBuffer.putInt(m.state.ordinal());

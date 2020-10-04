@@ -220,7 +220,7 @@ public class FastLeaderElection implements Election {
             			                + response.buffer.capacity());
             			        continue;
             			    }
-            			    response.buffer.clear();
+            			    ((java.nio.Buffer)response.buffer).clear();
 
             			    // State of peer that sent this message
             			    QuorumPeer.ServerState ackstate = QuorumPeer.ServerState.LOOKING;
@@ -344,7 +344,7 @@ public class FastLeaderElection implements Election {
                  * Building notification packet to send
                  */
                     
-                requestBuffer.clear();
+                ((java.nio.Buffer)requestBuffer).clear();
                 requestBuffer.putInt(m.state.ordinal());
                 requestBuffer.putLong(m.leader);
                 requestBuffer.putLong(m.zxid);

@@ -822,7 +822,7 @@ public class ClientCnxn {
                             + ", likely server has closed socket");
                 }
                 if (!incomingBuffer.hasRemaining()) {
-                    incomingBuffer.flip();
+                    ((java.nio.Buffer)incomingBuffer).flip();
                     if (incomingBuffer == lenBuffer) {
                         recvCount++;
                         readLength();
@@ -832,13 +832,13 @@ public class ClientCnxn {
                         if (!outgoingQueue.isEmpty()) {
                             enableWrite();
                         }
-                        lenBuffer.clear();
+                        ((java.nio.Buffer)lenBuffer).clear();
                         incomingBuffer = lenBuffer;
                         packetReceived = true;
                         initialized = true;
                     } else {
                         readResponse();
-                        lenBuffer.clear();
+                        ((java.nio.Buffer)lenBuffer).clear();
                         incomingBuffer = lenBuffer;
                         packetReceived = true;
                     }
@@ -1014,7 +1014,7 @@ public class ClientCnxn {
             /*
              * Reset incomingBuffer
              */
-            lenBuffer.clear();
+            ((java.nio.Buffer)lenBuffer).clear();
             incomingBuffer = lenBuffer;
         }
 
