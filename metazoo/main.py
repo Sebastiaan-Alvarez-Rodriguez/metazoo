@@ -15,15 +15,18 @@ Meta Zookeeper
 
 {0} <directive> [<directives>...]
 Directives:
-compile   Compile ancient Zookeeper
-check     Check whether environment has correct tools
-clean     Clean build directory
+compile      Compile ancient Zookeeper
+check        Check whether environment has correct tools
+clean        Clean build directory
+export       Export code to the DAS5
+export-fast  Export code to the DAS5 fast, skipping zookeeper-release code and deps
 help      Display this useful information
 '''.format(sys.argv[0]))
-    return False
+
 
 def get_zookeeper_loc():
     return fs.join(fs.dirname(fs.abspath()), 'zookeeper-release-3.3.0')
+
 
 # Check if required tools (Apache Ant, Java8) are available
 def check(silent=False):
@@ -41,6 +44,14 @@ def check(silent=False):
             print('Java 8', end='')
         print()
     return False
+
+
+def clean():
+    if not ant.ant_available():
+        print('Cleaning requires Ant!')
+        return False
+    print('Cleaning...')
+    return os.system('cd {0} && bash {1} clean'.format(get_zookeeper_loc(), ant.get_ant_loc_bin())) == 0
 
 
 def compile():
@@ -65,24 +76,53 @@ def compile():
     return statuscode == 0
 
 
-def clean():
-    if not ant.ant_available():
-        print('Cleaning requires Ant!')
-        return False
-    print('Cleaning...')
-    return os.system('cd {0} && bash {1} clean'.format(get_zookeeper_loc(), ant.get_ant_loc_bin())) == 0
+def export(skip_zookeeper_code=False):
+    remote = 'dpsdas5LU'
+    remote_dir = '/home/ddps2009/'
+    if skip_zookeeper_code:
+        print('Copying files using fast strategy...')
+        command = 'rsync -az {0} {1}:{2} {3} {4} {5}'.format(
+            fs.dirname(fs.abspath()),
+            remote,
+            remote_dir,
+            '--exclude zookeeper-release-3.3.0',
+            '--exclude deps',
+            '--exclude .git')
+    else:
+        print('Copying files using normal strategy...')
+        command = 'rsync -az {0} {1}:{2} {3}'.format(
+            fs.dirname(fs.abspath()),
+            remote,
+            remote_dir,
+            '--exclude .git')
+        if not clean():
+            print('[FAILURE] Cleaning failed')
+            return False
+
+    return os.system(command) == 0
+
+    
+
+
 
 def main():
     if len(sys.argv) == 1:
         help()
     returncode = 0
+
+
     for arg in sys.argv[1:]:
         directive = arg.strip().lower()
         try:
+            # Fetch method to call
             method = getattr(sys.modules[__name__], directive)
+
             returncode &= 1 if method() else 0
         except AttributeError as e:
-            print(e)
-            print('Error: directive "{0}" not found'.format(directive))
+            if arg == 'export-fast':
+                export(skip_zookeeper_code=True)
+            else:
+                print(e)
+                print('Error: directive "{0}" not found'.format(directive))
     exit(returncode)
 main()
