@@ -70,7 +70,7 @@ def clean():
         print('Cleaning requires Ant!')
         return False
     print('Cleaning...')
-    return os.system('cd ../zookeeper-release-3.3.0 && ant clean') == 0
+    return os.system('cd {0} && bash {1} clean'.format(get_zookeeper_loc(), ant.get_ant_loc_bin())) == 0
 
 def main():
     if len(sys.argv) == 1:
