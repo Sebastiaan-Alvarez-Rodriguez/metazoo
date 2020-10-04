@@ -30,8 +30,9 @@
     <property name="revision.properties" value="revision.properties" />
     <property file="${basedir}/src/java/${revision.properties}" />
     
-    <!-- Target Java 1.5 -->
+    <!-- Target Java 1.8 -->
     <property name="javac.target" value="1.8" />
+    <property name="javac.source" value="1.8" />
 
     <property name="src.dir" value="${basedir}/src" />
     <property name="java.src.dir" value="${src.dir}/java/main" />
@@ -212,7 +213,7 @@
     </target>
     
     <target name="jute" depends="init">
-        <javac srcdir="${java.src.dir}" destdir="${build.classes}" target="${javac.target}"
+        <javac srcdir="${java.src.dir}" destdir="${build.classes}" target="${javac.target}" source="${javac.source}"
             includes="org/apache/jute/**" debug="on" />
     </target>
 
@@ -247,7 +248,7 @@
     </target>
 
     <target name="ver-gen" depends="init">
-        <javac srcdir="${java.src.dir}" destdir="${build.classes}" target="${javac.target}"
+        <javac srcdir="${java.src.dir}" destdir="${build.classes}" target="${javac.target}" source="${javac.source}"
             includes="org/apache/zookeeper/version/util/**" debug="on" />
     </target>
     
@@ -281,7 +282,7 @@
     
     <target name="build-generated" depends="compile_jute,version-info" >
         <javac srcdir="${src_generated.dir}" destdir="${build.classes}" 
-            target="${javac.target}" debug="on" />
+            target="${javac.target}" source="${javac.source}" debug="on" />
     </target>
     
     <target name="ivy-download" unless="ivy.jar.exists" depends="init">
@@ -326,7 +327,7 @@
 
     <target name="compile" depends="ivy-retrieve,clover,build-generated">
         <javac srcdir="${java.src.dir}" destdir="${build.classes}" 
-               target="${javac.target}" debug="on">
+               target="${javac.target}" source="${javac.source}" debug="on">
             <classpath refid="java.classpath"/>
             <compilerarg value="-Xlint:all"/>
             <compilerarg value="-Xlint:-path"/>
@@ -336,11 +337,11 @@
     <target name="compile-test" depends="ivy-retrieve-test,compile">
       <mkdir dir="${test.java.classes}"/>
       <javac srcdir="${test.src.dir}" destdir="${test.java.classes}"
-             target="${javac.target}" debug="on">
+             target="${javac.target}" source="${javac.source}" debug="on">
         <classpath refid="test.java.classpath"/>
       </javac>
       <javac srcdir="${systest.src.dir}" destdir="${test.java.classes}"
-             target="${javac.target}" debug="on">
+             target="${javac.target}" source="${javac.source}" debug="on">
         <classpath refid="test.java.classpath"/>
       </javac>
     </target>
