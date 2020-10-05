@@ -8,11 +8,11 @@ def main(argv):
 	try:
 		opts, args = getopt.getopt(argv, 'hn:')
 	except getopt.GetoptError:
-		print('myrun.py -n <number of nodes> -t <runtime>')
+		print('myrun.py -n <number of nodes>')
 		sys.exit(2)
 	for opt, arg in opts:
 		if opt == '-h':
-			print('myrun.py -n <number of nodes> -t <runtime>')
+			print('myrun.py -n <number of nodes>')
 		elif opt in ('-n'):
 			nrnodes = int(arg)
 			if nrnodes < minnrnodes or nrnodes > maxnrnodes:

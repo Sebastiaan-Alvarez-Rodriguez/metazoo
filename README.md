@@ -1,6 +1,7 @@
 # Zookeeper
 This file lists several steps to follow when making this project.  
-The implementation is publicly available [here](http://hadoop.apache.org/zookeeper).  
+The implementation is publicly available [here](http://hadoop.apache.org/zookeeper).
+Documentation of the implementation is [here](https://zookeeper.apache.org/doc/r3.3.2/zookeeperAdmin.html).  
 The paper is available [here](https://static.usenix.org/event/atc10/tech/full_papers/Hunt.pdf).  
 Chubby paper is available [here](https://static.googleusercontent.com/media/research.google.com/en//archive/chubby-osdi06.pdf).
 
