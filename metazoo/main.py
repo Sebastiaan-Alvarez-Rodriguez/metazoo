@@ -24,7 +24,7 @@ compile_slow  Compile ancient Zookeeper fully, including src jars, javadoc etc
 compile       Compile ancient
 check         Check whether environment has correct tools
 clean         Clean build directory
-exec          Execute code on the DAS5
+exec          Call this on the DAS5 to handle server orchestration
 export_slow   Export all code to the DAS5, including zookeeper-release code and deps
 export        Export only metazoo and script code to the DAS5
 remote_slow   Execute code on the DAS5 from your local machine, using normal export
@@ -151,7 +151,8 @@ def main():
             # Fetch method to call
             method = getattr(sys.modules[__name__], directive)
 
-            returncode &= 1 if method() else 0
+            if not method():
+                print('[FAILURE] Exception during directive {}'.format(arg))
         except AttributeError as e:
             if arg == 'compile_slow':
                 compile(fast=False)
