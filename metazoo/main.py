@@ -9,7 +9,6 @@ import supplier.java as jv
 import supplier.ant as ant
 import remote.remote as rmt
 
-
 def is_compiled():
     return fs.isfile(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
 
