@@ -10,6 +10,9 @@ import util.location as loc
 from remote.executor import Executor
 from remote.config import ServerConfig
 
+def nodenr_to_infiniband(nodenr):
+    return '10.149.1.'+nodenr
+
 
 # Populates uninitialized config members
 def populate_config(config):
@@ -25,8 +28,10 @@ def gen_zookeeper_config(config):
     port_to_elect  = 2183
     
     # This list should be the same everywhere
-    # TODO: Use infiniband connection
-    serverlist = ['server.{0}=node{1}:{2}:{3}'.format(idx+1, nodenumber, port_to_leader, port_to_elect) for idx, nodenumber in enumerate(config.cnf.servers)]
+    serverlist = []
+    for idx, nodenumber in enumerate(config.cnf.servers):
+        node = nodenr_to_infiniband(nodenumber) if config.cnf.servers_use_infiniband else 'node'+nodenumber
+        serverlist.append('server.{0}={1}:{2}:{3}'.format(idx+1, node, port_to_leader, port_to_elect))
 
     ticktime         = 2000
     initlimit        = 10
