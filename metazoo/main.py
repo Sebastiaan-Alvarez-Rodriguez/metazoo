@@ -2,6 +2,7 @@
 import sys
 import os
 import subprocess
+import argparse
 
 import util.location as loc
 import util.fs as fs
@@ -84,12 +85,12 @@ def _exec_internal():
     rmt.run()
 
 
-def exec(fast=True):
+def exec(fast=True, comp=True):
     print('Connected!')
-    if fast and is_compiled():
+    if comp or not is_compiled():
+        compile(fast=fast)
+    elif is_compiled():
         print('Skipping compilation: Already compiled!')
-    else:
-        compile(fast=True) # We do not want to build javadoc anyway
     try:
         nodes = input('How many nodes do you want to allocate? ').strip()
         nr_nodes = int(nodes)
@@ -97,7 +98,7 @@ def exec(fast=True):
         print('[FAILURE] Input "{0}" is not a number'.format(nodes))
         return False
 
-    command = 'prun -np {0} -1 python3 {1} _exec_internal'.format(nr_nodes, fs.join(fs.abspath(), 'main.py'))
+    command = 'prun -np {0} -1 python3 {1} --internal'.format(nr_nodes, fs.join(fs.abspath(), 'main.py'))
     return os.system(command) == 0
 
 
@@ -125,47 +126,93 @@ def export(fast=True):
     return os.system(command) == 0
 
 
-def remote(fast=True):
-    if not export(fast=fast):
+def remote(fast=True, exp=True, comp=True):
+    if exp and not export(fast=fast):
         print('[FAILURE] Could not export data')
         return False
+
+    program = '--exec'
+    if not fast:
+        program += ' -s'
+    if not comp:
+        program += ' -c'
 
     command = 'ssh {0} "python3 {1}/zookeeper/metazoo/main.py {2}"'.format(
         rmt.get_remote(),
         loc.get_remote_dir(),
-        'exec' if fast else 'exec_slow')
+        program)
     print('Connecting to {0}...'.format(rmt.get_remote()))
     return os.system(command) == 0
 
 
 def main():
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--compile', help='compile ancient', action='store_true')
+    group.add_argument('--check', help='check whether environment has correct tools', action='store_true')
+    group.add_argument('--clean', help='clean build directory', action='store_true')
+    group.add_argument('--exec', help='call this on the DAS5 to handle server orchestration', action='store_true')
+    group.add_argument('--export', help='export only metazoo and script code to the DAS5', action='store_true')
+    group.add_argument('--remote', help='execute code on the DAS5 from your local machine', action='store_true')
+    group.add_argument('--internal', help=argparse.SUPPRESS, action='store_true')
+    parser.add_argument('-s', '--slow', help='''\
+slow mode (only for compile, export, remote)
+    compile: compile ancient Zookeeper fully, including src jars, javadoc etc
+    export:  export all code to the DAS5, including zookeeper-release code and deps
+    remote:  execute code on the DAS5 from your local machine, using normal export''', action='store_true')
+    parser.add_argument('-c', '--no-compile', dest='skip_comp', help='skips the compilation phase (remote/ exec only)', action='store_true')
+    parser.add_argument('-e', '--no-export', dest='skip_exp', help='skips the export phase (remote only)', action='store_true')
+    args = parser.parse_args()
+
+    fast = 'fast' if not args.slow else 'slow'
+    skip_comp = 'skips compilation' if args.skip_comp else 'compiles'
+    skip_exp = 'skips export' if args.skip_exp else 'exports'
+
+    if args.compile: 
+        compile(fast=not args.slow)
+    elif args.check:
+        check()
+    elif args.clean:
+        clean()
+    elif args.exec:
+        exec(fast=not args.slow, comp=not args.skip_comp)
+    elif args.export:
+        export(fast=not args.slow)
+    elif args.remote:
+        remote(fast=not args.slow, exp=not args.skip_exp, comp=not args.skip_comp)
+    elif args.internal:
+        _exec_internal()
+    
+
     if len(sys.argv) == 1:
-        help()
-    returncode = 0
+        parser.print_help()
+    # returncode = 0
 
 
-    for arg in sys.argv[1:]:
-        directive = arg.strip().lower()
-        try:
-            # Fetch method to call
-            method = getattr(sys.modules[__name__], directive)
 
-            if not method():
-                print('[FAILURE] Exception during directive {}'.format(arg))
-        except AttributeError as e:
-            if arg == 'compile_slow':
-                compile(fast=False)
-            elif arg == 'exec_slow':
-                exec(fast=False)
-            elif arg == 'export_slow':
-                export(fast=False)
-            elif arg == 'remote_slow':
-                remote(fast=False)
-            else:
-                print(e)
-                print('Error: directive "{0}" not found'.format(directive))
-                exit(1)
-    exit(returncode)
+
+    # for arg in sys.argv[1:]:
+    #     directive = arg.strip().lower()
+    #     try:
+    #         # Fetch method to call
+    #         method = getattr(sys.modules[__name__], directive)
+
+    #         if not method():
+    #             print('[FAILURE] Exception during directive {}'.format(arg))
+    #     except AttributeError as e:
+    #         if arg == 'compile_slow':
+    #             compile(fast=False)
+    #         elif arg == 'exec_slow':
+    #             exec(fast=False)
+    #         elif arg == 'export_slow':
+    #             export(fast=False)
+    #         elif arg == 'remote_slow':
+    #             remote(fast=False)
+    #         else:
+    #             print(e)
+    #             print('Error: directive "{0}" not found'.format(directive))
+    #             exit(1)
+    # exit(returncode)
 
 if __name__ == '__main__':
     main()
