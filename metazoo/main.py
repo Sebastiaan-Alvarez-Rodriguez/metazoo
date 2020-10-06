@@ -84,25 +84,26 @@ def exec(force_comp=False):
 
 
 def export(full_exp=False):
+    print('Copying files using "{}" strategy...'.format('full' if full_exp else 'fast'))
     if full_exp:
-        print('Copying files using normal strategy...')
-        command = 'rsync -az {0} {1}:{2} {3}'.format(
+        command = 'rsync -az {0} {1}:{2} {3} {4}'.format(
             fs.dirname(fs.abspath()),
             rmt.get_remote(),
             loc.get_remote_dir(),
-            '--exclude .git')
+            '--exclude .git',
+            '--exclude __pycache__')
         if not clean():
             print('[FAILURE] Cleaning failed')
             return False
     else:
-        print('Copying files using fast strategy (skipping Zookeeper src files)...')
-        command = 'rsync -az {0} {1}:{2} {3} {4} {5}'.format(
+        command = 'rsync -az {0} {1}:{2} {3} {4} {5} {6}'.format(
             fs.dirname(fs.abspath()),
             rmt.get_remote(),
             loc.get_remote_dir(),
             '--exclude zookeeper-release-3.3.0',
             '--exclude deps',
-            '--exclude .git')
+            '--exclude .git',
+            '--exclude __pycache__')
 
     return os.system(command) == 0
 
