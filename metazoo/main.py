@@ -61,7 +61,7 @@ def clean():
     return os.system('cd {0} && bash {1} clean > /dev/null 2>&1'.format(loc.get_zookeeper_dir(), loc.get_ant_loc_bin())) == 0
 
 
-def compile(fast=True):
+def compile(slow=False):
     print('Compiling...')
     if not ant.install():
         print('[FAILURE] Cannot install Apache Ant')
@@ -76,7 +76,7 @@ def compile(fast=True):
         print('[FAILURE] Could not find {0}'.format(zookeeper_loc))
         return False
 
-    statuscode = os.system('cd {0} && bash {1} {2} > /dev/null 2>&1'.format(zookeeper_loc, loc.get_ant_loc_bin(), 'jar' if fast else 'binary'))
+    statuscode = os.system('cd {0} && bash {1} {2} > /dev/null 2>&1'.format(zookeeper_loc, loc.get_ant_loc_bin(), 'binary' if slow else 'jar'))
 
     if statuscode == 0:
         print('Compilation completed!')
@@ -87,30 +87,21 @@ def _exec_internal():
     return rmt.run()
 
 
-def exec(fast=True, comp=True):
+def exec(slow=True, comp=True):
     print('Connected!', flush=True)
     if comp or not is_compiled():
-        compile(fast=fast)
+        compile(slow=slow)
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
     psr.check_config() # Check configuration file and ask questions is necessary
 
-    command = 'prun -np {0} -1 python3 {1} --internal'.format(nr_nodes, fs.join(fs.abspath(), 'main.py'))
+    command = 'prun -np {0} -1 python3 {1} --internal'.format(psr.get_num_nodes(), fs.join(fs.abspath(), 'main.py'))
     print('Booting network...', flush=True)
     return os.system(command) == 0
 
 
-def export(fast=True):
-    if fast:
-        print('Copying files using fast strategy...')
-        command = 'rsync -az {0} {1}:{2} {3} {4} {5}'.format(
-            fs.dirname(fs.abspath()),
-            rmt.get_remote(),
-            loc.get_remote_dir(),
-            '--exclude zookeeper-release-3.3.0',
-            '--exclude deps',
-            '--exclude .git')
-    else:
+def export(slow=False):
+    if slow:
         print('Copying files using normal strategy...')
         command = 'rsync -az {0} {1}:{2} {3}'.format(
             fs.dirname(fs.abspath()),
@@ -120,17 +111,26 @@ def export(fast=True):
         if not clean():
             print('[FAILURE] Cleaning failed')
             return False
+    else:
+        print('Copying files using fast strategy...')
+        command = 'rsync -az {0} {1}:{2} {3} {4} {5}'.format(
+            fs.dirname(fs.abspath()),
+            rmt.get_remote(),
+            loc.get_remote_dir(),
+            '--exclude zookeeper-release-3.3.0',
+            '--exclude deps',
+            '--exclude .git')
 
     return os.system(command) == 0
 
 
-def remote(fast=True, exp=True, comp=True):
-    if exp and not export(fast=fast):
+def remote(slow=False, exp=True, comp=True):
+    if exp and not export(slow=slow):
         print('[FAILURE] Could not export data')
         return False
 
     program = '--exec'
-    if not fast:
+    if slow:
         program += ' -s'
     if not comp:
         program += ' -c'
@@ -162,22 +162,19 @@ slow mode (only for compile, export, remote)
     parser.add_argument('-e', '--no-export', dest='skip_exp', help='skips the export phase (remote only)', action='store_true')
     args = parser.parse_args()
 
-    fast = 'fast' if not args.slow else 'slow'
-    skip_comp = 'skips compilation' if args.skip_comp else 'compiles'
-    skip_exp = 'skips export' if args.skip_exp else 'exports'
 
     if args.compile: 
-        compile(fast=not args.slow)
+        compile(slow=args.slow)
     elif args.check:
         check()
     elif args.clean:
         clean()
     elif args.exec:
-        exec(fast=not args.slow, comp=not args.skip_comp)
+        exec(slow=args.slow, comp=not args.skip_comp)
     elif args.export:
-        export(fast=not args.slow)
+        export(slow=args.slow)
     elif args.remote:
-        remote(fast=not args.slow, exp=not args.skip_exp, comp=not args.skip_comp)
+        remote(slow=args.slow, exp=not args.skip_exp, comp=not args.skip_comp)
     elif args.internal:
         _exec_internal()
     
