@@ -9,6 +9,8 @@ import util.fs as fs
 import supplier.java as jv
 import supplier.ant as ant
 import remote.remote as rmt
+import parse.parser as psr
+
 
 def is_compiled():
     return fs.isfile(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
@@ -82,23 +84,19 @@ def compile(fast=True):
 
 
 def _exec_internal():
-    rmt.run()
+    return rmt.run()
 
 
 def exec(fast=True, comp=True):
-    print('Connected!')
+    print('Connected!', flush=True)
     if comp or not is_compiled():
         compile(fast=fast)
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
-    try:
-        nodes = input('How many nodes do you want to allocate? ').strip()
-        nr_nodes = int(nodes)
-    except Exception as e:
-        print('[FAILURE] Input "{0}" is not a number'.format(nodes))
-        return False
+    psr.check_config() # Check configuration file and ask questions is necessary
 
     command = 'prun -np {0} -1 python3 {1} --internal'.format(nr_nodes, fs.join(fs.abspath(), 'main.py'))
+    print('Booting network...', flush=True)
     return os.system(command) == 0
 
 
@@ -186,33 +184,6 @@ slow mode (only for compile, export, remote)
 
     if len(sys.argv) == 1:
         parser.print_help()
-    # returncode = 0
-
-
-
-
-    # for arg in sys.argv[1:]:
-    #     directive = arg.strip().lower()
-    #     try:
-    #         # Fetch method to call
-    #         method = getattr(sys.modules[__name__], directive)
-
-    #         if not method():
-    #             print('[FAILURE] Exception during directive {}'.format(arg))
-    #     except AttributeError as e:
-    #         if arg == 'compile_slow':
-    #             compile(fast=False)
-    #         elif arg == 'exec_slow':
-    #             exec(fast=False)
-    #         elif arg == 'export_slow':
-    #             export(fast=False)
-    #         elif arg == 'remote_slow':
-    #             remote(fast=False)
-    #         else:
-    #             print(e)
-    #             print('Error: directive "{0}" not found'.format(directive))
-    #             exit(1)
-    # exit(returncode)
 
 if __name__ == '__main__':
     main()

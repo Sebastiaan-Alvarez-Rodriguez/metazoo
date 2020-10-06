@@ -1,0 +1,95 @@
+# Code in this file is executed on each server.
+# The goal is to boot a zookeeper server, and make sure it knows of the other ones
+
+import os
+import socket
+import time
+
+import util.fs as fs
+import util.location as loc
+from remote.executor import Executor
+from remote.config import ServerConfig
+
+
+# Populates uninitialized config members
+def populate_config(config):
+    config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_dir(), config.server_id)
+    config.log4j_loc = '.'
+    config.log4j_properties = 'ERROR,CONSOLE' # Log INFO-level information, send to console
+
+
+# Generates the Zookeeper config file for this server instance.
+# Config is written to zookeeper-release-3.3.0/conf/<serverid>.cfg
+def gen_zookeeper_config(config):
+    port_to_leader = 2182
+    port_to_elect  = 2183
+    
+    # This list should be the same everywhere
+    # TODO: Use infiniband connection
+    serverlist = ['server.{0}=node{1}:{2}:{3}'.format(idx+1, nodenumber, port_to_leader, port_to_elect) for idx, nodenumber in enumerate(config.cnf.servers)]
+
+    ticktime         = 2000
+    initlimit        = 10
+    synclimit        = 5
+    clientport       = 2181
+
+    config_string = '''
+tickTime={0}
+initLimit={1}
+syncLimit={2}
+dataDir={3}
+clientPort={4}
+{5}'''.format(
+    ticktime,
+    initlimit,
+    synclimit,
+    config.datadir,
+    clientport,
+    '\n'.join(serverlist))
+
+    with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.server_id)), 'w') as file:
+        file.write(config_string)
+
+
+# Starts Zookeeper, returns immediately after starting a thread containing our process
+def boot_server(config):
+    # return os.system('bash {0} start &'.format(fs.join(get_remote_bin_dir(), 'zkServer.sh'))) == 0
+
+    classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
+    prefix = ':'.join([
+        loc.get_cfg_dir(),
+        ':'.join([file for file in fs.ls(loc.get_lib_dir(), only_files=True, full_paths=True) if file.endswith('.jar')]),
+        ':'.join([file for file in fs.ls(loc.get_build_lib_dir(), only_files=True, full_paths=True) if file.endswith('.jar')]),
+        fs.join(loc.get_build_dir(), 'classes')])
+
+    classpath = '{}:{}'.format(prefix, classpath)
+    zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
+    conf_location = fs.join(loc.get_cfg_dir(), str(config.server_id)+'.cfg')
+
+    command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}" > /dev/null 2>&1'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location)
+    executor = Executor(command)
+    executor.run(shell=True)
+
+    fs.mkdir(config.datadir, exist_ok=True)
+    with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
+        file.write(str(config.server_id))
+    return executor
+
+
+# Stops Zookeeper instance
+def stop_server(executor):
+    return executor.stop()
+
+
+def run(config):
+    populate_config(config)
+    gen_zookeeper_config(config)
+    print('-----------------[ Going to boot    ({}) ]-----------------'.format(config.server_id), flush=True)
+    executor = boot_server(config)
+    print('-----------------[ Boot complete    ({}) ]-----------------'.format(config.server_id), flush=True)
+    time.sleep(10)
+    # status_zookeeper()
+    print('-----------------[ Going to halt    ({}) ]-----------------'.format(config.server_id), flush=True)
+    stop_server(executor)
+    print('-----------------[ Halting complete ({}) ]-----------------'.format(config.server_id), flush=True)
+    return True

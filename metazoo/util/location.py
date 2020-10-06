@@ -2,8 +2,11 @@ import util.fs as fs
 
 #################### MetaZoo directories ####################
 
-def get_dep_dir():
+def get_metazoo_dep_dir():
     return fs.join(fs.abspath(), 'deps')
+
+def get_metazoo_config_dir():
+    return fs.join(fs.abspath())
 
 #################### Zookeeper directories ####################
 def get_zookeeper_dir():
@@ -26,7 +29,7 @@ def get_build_lib_dir():
 
 #################### Ant directories ####################
 def get_ant_loc_dep():
-    return fs.join(get_dep_dir(), 'ant')
+    return fs.join(get_metazoo_dep_dir(), 'ant')
 
 def get_ant_loc_bin():
     return fs.join(get_ant_loc_dep(), 'bin', 'ant')
