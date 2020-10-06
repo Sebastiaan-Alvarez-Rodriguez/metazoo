@@ -78,8 +78,9 @@ def exec(force_comp=False, override_conf=False):
         print('Skipping compilation: Already compiled!')
 
     if override_conf:
-        fs.rm(fs.join(loc.get_metazoo_config_dir(), 'metazoo.cfg'))
-    psr.check_config() # Check configuration file and ask questions is necessary
+        psr.gen_config()
+    else:
+        psr.check_config() # Check configuration file and ask questions is necessary
     num_nodes_total = psr.get_num_nodes()
 
     command = 'prun -np {0} -1 python3 {1} --exec_internal'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'))
