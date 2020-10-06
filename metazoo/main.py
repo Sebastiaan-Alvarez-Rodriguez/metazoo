@@ -8,6 +8,8 @@ import util.fs as fs
 import supplier.java as jv
 import supplier.ant as ant
 import remote.remote as rmt
+import parse.parser as psr
+
 
 def is_compiled():
     return fs.isfile(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
@@ -81,23 +83,19 @@ def compile(fast=True):
 
 
 def _exec_internal():
-    rmt.run()
+    return rmt.run()
 
 
 def exec(fast=True):
-    print('Connected!')
+    print('Connected!', flush=True)
     if fast and is_compiled():
         print('Skipping compilation: Already compiled!')
     else:
-        compile(fast=True) # We do not want to build javadoc anyway
-    try:
-        nodes = input('How many nodes do you want to allocate? ').strip()
-        nr_nodes = int(nodes)
-    except Exception as e:
-        print('[FAILURE] Input "{0}" is not a number'.format(nodes))
-        return False
+        compile(fast=True) # We do not want to build javadoc on the server anyway
+    psr.check_config() # Check configuration file and ask questions is necessary
 
-    command = 'prun -np {0} -1 python3 {1} _exec_internal'.format(nr_nodes, fs.join(fs.abspath(), 'main.py'))
+    command = 'prun -np {0} -1 python3 {1} _exec_internal'.format(psr.get_num_nodes(), fs.join(fs.abspath(), 'main.py'))
+    print('Booting network...', flush=True)
     return os.system(command) == 0
 
 
