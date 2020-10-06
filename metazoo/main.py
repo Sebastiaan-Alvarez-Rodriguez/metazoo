@@ -68,7 +68,7 @@ def _exec_internal():
     return rmt.run()
 
 
-def exec(force_comp=False):
+def exec(force_comp=False, override_conf=False):
     print('Connected!', flush=True)
     if (force_comp or not is_compiled()):
         if not compile():
@@ -76,9 +76,13 @@ def exec(force_comp=False):
             return False
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
-    psr.check_config() # Check configuration file and ask questions is necessary
 
-    command = 'prun -np {0} -1 python3 {1} --exec_internal'.format(psr.get_num_nodes(), fs.join(fs.abspath(), 'main.py'))
+    if override_conf:
+        fs.rm(fs.join(loc.get_metazoo_config_dir(), 'metazoo.cfg'))
+    psr.check_config() # Check configuration file and ask questions is necessary
+    num_nodes_total = psr.get_num_nodes()
+
+    command = 'prun -np {0} -1 python3 {1} --exec_internal'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'))
     print('Booting network...', flush=True)
     return os.system(command) == 0
 
@@ -116,6 +120,7 @@ def _init_internal():
         return False
     return True
 
+
 def init():
     print('''
 NOTICE: MetaZoo uses SSH to communicate with the DAS5.
@@ -133,12 +138,13 @@ This way, you will not be asked for your password at every command.
     if tmp:
         print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
-def remote(force_exp=False, force_comp=False):
+
+def remote(force_exp=False, force_comp=False, override_conf=False):
     if force_exp and not export(full_exp=True):
         print('[FAILURE] Could not export data')
         return False
 
-    program = '--exec'+(' -c' if force_comp else '')
+    program = '--exec'+(' -c' if force_comp else '')+(' -o' if override_conf else '')
 
     command = 'ssh {0} "python3 {1}/zookeeper/metazoo/main.py {2}"'.format(
         rmt.get_remote(),
@@ -162,6 +168,7 @@ def main():
     group.add_argument('--remote', help='execute code on the DAS5 from your local machine', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
     parser.add_argument('-e', '--force-export', dest='force_exp', help='Forces to re-do the export phase', action='store_true')
+    parser.add_argument('-o', '--override-conf', dest='override_conf', help='Forces MetaZoo to ignore existing configs', action='store_true')
     args = parser.parse_args()
 
 
@@ -174,7 +181,7 @@ def main():
     elif args.exec_internal:
         _exec_internal()
     elif args.exec:
-        exec(force_comp=args.force_comp)
+        exec(force_comp=args.force_comp, override_conf=args.override_conf)
     elif args.export:
         export(full_exp=True)
     elif args.init_internal:
@@ -182,7 +189,7 @@ def main():
     elif args.init:
         init()
     elif args.remote:
-        remote(force_exp=args.force_exp, force_comp=args.force_comp)
+        remote(force_exp=args.force_exp, force_comp=args.force_comp, override_conf=args.override_conf)
     
 
     if len(sys.argv) == 1:
