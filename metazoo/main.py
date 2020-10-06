@@ -96,6 +96,7 @@ def export(full_exp=False):
             print('[FAILURE] Cleaning failed')
             return False
     else:
+        print('[Note] This means we skip zookeeper-release-3.3.0 files.')
         command = 'rsync -az {0} {1}:{2} {3} {4} {5} {6}'.format(
             fs.dirname(fs.abspath()),
             rmt.get_remote(),
