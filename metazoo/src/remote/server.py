@@ -11,7 +11,7 @@ from remote.executor import Executor
 from remote.config import ServerConfig
 
 def nodenr_to_infiniband(nodenr):
-    return '10.149.1.'+nodenr
+    return '10.149.1.'+str(nodenr[1:])
 
 
 # Populates uninitialized config members
@@ -30,7 +30,7 @@ def gen_zookeeper_config(config):
     # This list should be the same everywhere
     serverlist = []
     for idx, nodenumber in enumerate(config.cnf.servers):
-        node = nodenr_to_infiniband(nodenumber) if config.cnf.servers_use_infiniband else 'node'+nodenumber
+        node = nodenr_to_infiniband(nodenumber) if config.cnf.server_inifiniband else 'node'+nodenumber
         serverlist.append('server.{0}={1}:{2}:{3}'.format(idx+1, node, port_to_leader, port_to_elect))
 
     ticktime         = 2000
@@ -87,14 +87,4 @@ def stop_server(executor):
 
 
 def run(config):
-    populate_config(config)
-    gen_zookeeper_config(config)
-    print('-----------------[ Going to boot    ({}) ]-----------------'.format(config.server_id), flush=True)
-    executor = boot_server(config)
-    print('-----------------[ Boot complete    ({}) ]-----------------'.format(config.server_id), flush=True)
-    time.sleep(10)
-    # status_zookeeper()
-    print('-----------------[ Going to halt    ({}) ]-----------------'.format(config.server_id), flush=True)
-    stop_server(executor)
-    print('-----------------[ Halting complete ({}) ]-----------------'.format(config.server_id), flush=True)
     return True

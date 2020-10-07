@@ -4,13 +4,14 @@ import os
 import subprocess
 import argparse
 
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
+import dynamic.experiment as exp
+import parse.parser as psr
+import remote.remote as rmt
+import supplier.ant as ant
+import supplier.java as jv
 import util.location as loc
 import util.fs as fs
-import supplier.java as jv
-import supplier.ant as ant
-import remote.remote as rmt
-import parse.parser as psr
-
 
 def is_compiled():
     return fs.isfile(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
@@ -81,11 +82,20 @@ def exec(force_comp=False, override_conf=False):
         psr.gen_config()
     else:
         psr.check_config() # Check configuration file and ask questions is necessary
-    num_nodes_total = psr.get_num_nodes()
+    print('Loading experiment...', flush=True)
+    experiment = exp.get_experiment()
+    num_nodes_total = experiment.num_servers + experiment.num_clients
 
     command = 'prun -np {0} -1 python3 {1} --exec_internal'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'))
     print('Booting network...', flush=True)
-    return os.system(command) == 0
+
+    experiment.pre_experiment()
+    success = os.system(command) == 0
+    experiment.post_experiment()
+    experiment.clean()
+    print('[SUCCESS] Experiment complete!')
+    return success
+
 
 
 def export(full_exp=False):

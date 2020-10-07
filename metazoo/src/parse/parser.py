@@ -11,7 +11,7 @@ class Parser(object):
     def __init__(self):
         config_loc = fs.join(loc.get_metazoo_config_dir(), 'metazoo.cfg')
         if not fs.isfile(config_loc):
-            Parser.write_config(config_loc)
+            write_config(config_loc)
 
         self.parser = configparser.ConfigParser()
         self.parser.read(config_loc)

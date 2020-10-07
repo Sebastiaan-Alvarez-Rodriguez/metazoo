@@ -1,9 +1,9 @@
 import socket
 import os
 
+from dynamic.experiment import Experiment
 from remote.config import Config, ServerConfig
 import remote.server as srv
-
 
 def get_remote():
     return 'dpsdas5LU'
@@ -46,7 +46,12 @@ def construct_config():
 def run():
     config = construct_config()
     if isinstance(config, ServerConfig):
-        return srv.run(config)
+        experiment = Experiment.load()
+        if config.server_id == None:
+            raise RuntimeError('Oh oh , should not happen')
+        experiment.experiment_server(config.server_id)
+        return True
+        # return srv.run(config)
     else:
         pass #TODO: Construct client to run
         return True
