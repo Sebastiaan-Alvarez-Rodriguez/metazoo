@@ -1,4 +1,5 @@
 import util.fs as fs
+import os
 
 #################### MetaZoo directories ####################
 
@@ -10,6 +11,9 @@ def get_metazoo_config_dir():
 
 def get_metazoo_experiment_dir():
     return fs.join(fs.abspath(), 'experiments')
+
+def get_metazoo_log_dir():
+    return fs.join(fs.abspath(), 'logs')
 
 #################### Zookeeper directories ####################
 def get_zookeeper_dir():
@@ -45,3 +49,7 @@ def get_remote_dir():
 
 def get_remote_prj_dir():
     return fs.join(get_remote_dir(), 'zookeeper')
+
+#################### Node directories ####################
+def get_node_log_dir():
+    return os.environ['HOME']
