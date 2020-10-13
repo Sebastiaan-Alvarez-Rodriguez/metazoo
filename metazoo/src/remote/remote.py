@@ -4,6 +4,7 @@ import os
 from dynamic.experiment import Experiment
 from remote.config import Config, ServerConfig
 import remote.server as srv
+import util.fs as fs
 
 def get_remote():
     return 'dpsdas5LU'
@@ -50,6 +51,8 @@ def run():
         if config.server_id == None:
             raise RuntimeError('Oh oh , should not happen')
         experiment.experiment_server(config.server_id)
+        local_log = '.metazoo-log'
+        fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log + str(config.server_id)))
         return True
         # return srv.run(config)
     else:

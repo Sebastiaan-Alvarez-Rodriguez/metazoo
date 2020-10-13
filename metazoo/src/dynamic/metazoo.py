@@ -7,6 +7,7 @@ import util.location as loc
 class MetaZoo(object):
     def __init__(self):
         self.register = dict()
+        self.log = None
         self._id = None
 
 

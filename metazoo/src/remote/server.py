@@ -11,13 +11,14 @@ from remote.executor import Executor
 from remote.config import ServerConfig
 
 def nodenr_to_infiniband(nodenr):
-    return '10.149.1.'+str(nodenr[1:])
+    return '10.149.1.'+str(nodenr)[1:]
+
 
 
 # Populates uninitialized config members
 def populate_config(config):
     config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_dir(), config.server_id)
-    config.log4j_loc = '.'
+    config.log4j_loc = loc.get_cfg_dir()
     config.log4j_properties = 'ERROR,CONSOLE' # Log INFO-level information, send to console
 
 
@@ -30,7 +31,7 @@ def gen_zookeeper_config(config):
     # This list should be the same everywhere
     serverlist = []
     for idx, nodenumber in enumerate(config.cnf.servers):
-        node = nodenr_to_infiniband(nodenumber) if config.cnf.server_inifiniband else 'node'+nodenumber
+        node = nodenr_to_infiniband(nodenumber) if config.cnf.server_infiniband else 'node'+nodenumber
         serverlist.append('server.{0}={1}:{2}:{3}'.format(idx+1, node, port_to_leader, port_to_elect))
 
     ticktime         = 2000
@@ -71,7 +72,7 @@ def boot_server(config):
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
     conf_location = fs.join(loc.get_cfg_dir(), str(config.server_id)+'.cfg')
 
-    command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}" > /dev/null 2>&1'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location)
+    command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}"'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location)
     executor = Executor(command)
     executor.run(shell=True)
 
