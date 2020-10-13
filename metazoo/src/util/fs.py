@@ -76,7 +76,14 @@ def rm(directory, *args, ignore_errors=False):
     if isdir(path):
         shutil.rmtree(path, ignore_errors=ignore_errors)
     else:
-        os.remove(path)
+        if ignore_errors:
+            try:
+                os.remove(path)
+            except Exception as e:
+                pass
+        else:
+            os.remove(path)
+
 
 def sep():
     return os.sep

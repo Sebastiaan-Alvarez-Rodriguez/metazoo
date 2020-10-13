@@ -8,6 +8,9 @@ def get_metazoo_dep_dir():
 def get_metazoo_config_dir():
     return fs.join(fs.abspath())
 
+def get_metazoo_experiment_dir():
+    return fs.join(fs.abspath(), 'experiments')
+
 #################### Zookeeper directories ####################
 def get_zookeeper_dir():
     return fs.join(fs.dirname(fs.abspath()), 'zookeeper-release-3.3.0')

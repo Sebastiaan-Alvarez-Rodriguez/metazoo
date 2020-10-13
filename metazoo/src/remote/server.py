@@ -14,6 +14,7 @@ def nodenr_to_infiniband(nodenr):
     return '10.149.1.'+str(nodenr)[1:]
 
 
+
 # Populates uninitialized config members
 def populate_config(config):
     config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_dir(), config.server_id)
@@ -87,14 +88,4 @@ def stop_server(executor):
 
 
 def run(config):
-    populate_config(config)
-    gen_zookeeper_config(config)
-    print('-----------------[ Going to boot    ({}) ]-----------------'.format(config.server_id), flush=True)
-    executor = boot_server(config)
-    print('-----------------[ Boot complete    ({}) ]-----------------'.format(config.server_id), flush=True)
-    time.sleep(10)
-    # status_zookeeper()
-    print('-----------------[ Going to halt    ({}) ]-----------------'.format(config.server_id), flush=True)
-    stop_server(executor)
-    print('-----------------[ Halting complete ({}) ]-----------------'.format(config.server_id), flush=True)
     return True

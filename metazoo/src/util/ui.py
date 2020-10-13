@@ -25,3 +25,23 @@ def ask_bool(question):
             return False
         else:
             print('Input "{0}" could not be interpreted as a boolean. Try again'.format(val))
+
+
+# Ask user to pick one of the displayed options.
+# Returns integer index of picked item
+def ask_pick(question, options: list):
+    while True:
+        for idx, x in enumerate(options):
+            print('[{}] - {}'.format(idx, x))
+        try:
+            val = input(str(question)+' ').strip()
+            val_cast = int(val)
+            if val_cast < 0:
+                print('Input is too small')
+                continue
+            if val_cast >= len(options):
+                print('Input is too large')
+                continue
+            return val_cast
+        except Exception as e:
+            print('Input "{0}" is not a number. Try again'.format(val))

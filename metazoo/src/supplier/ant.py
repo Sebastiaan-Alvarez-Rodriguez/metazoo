@@ -20,12 +20,18 @@ def install():
     print('Installing ant in {0}'.format(depsloc))
 
     ziploc = fs.join(depsloc, 'ant.zip')
-    if not fs.exists(ziploc):
+    
+    for x in range(5):
+        fs.rm(ziploc)
         url = 'https://downloads.apache.org//ant/binaries/apache-ant-1.10.9-bin.zip'
+        print('[{0}]Fetching ant from {1}'.format(x, url))
         urllib.request.urlretrieve(url, ziploc)
 
-    with zipfile.ZipFile(ziploc, 'r') as zip_ref:
-        zip_ref.extractall(depsloc)
+        try:
+            with zipfile.ZipFile(ziploc, 'r') as zip_ref:
+                zip_ref.extractall(depsloc)
+        except zipfile.BadZipFile as e:
+            print('Bad zipfile detected. Retrying...')
 
     apache_ant = 'apache-ant-1.10.9'
     tmploc = fs.join(depsloc, apache_ant)
