@@ -1,6 +1,7 @@
 from experiments.interface import ExperimentInterface
 import remote.server as srv
 import util.fs as fs
+import os
 
 class ExampleExperiment(ExperimentInterface):
     '''
@@ -28,16 +29,16 @@ class ExampleExperiment(ExperimentInterface):
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
-        print('Hello from client with id={}.'.format(metazoo.id))
-        time.sleep(5)
+        print('Hello from client, I will connect to:{}.'.format(metazoo))
+        os.system('javac {}'.format(get_client_loc()))
+        os.system('java {0} {1}'.format(get_client_loc(), metazoo))
         
 
 
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
-        print('I am server {}, and I am going to boot ZooKeeper now'.format(metazoo.id))
-        #TODO: config
-        srv.boot_server(config)
+        print('I am server {}, and I am running ZooKeeper now...'.format(metazoo.id))
+        time.sleep(10)
 
 
     def post_experiment(self, metazoo):

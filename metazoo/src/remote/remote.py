@@ -50,11 +50,17 @@ def run():
         experiment = Experiment.load()
         if config.server_id == None:
             raise RuntimeError('Oh oh , should not happen')
+        executor = srv.boot_server(config)    
         experiment.experiment_server(config.server_id)
+        srv.stop_server(executor)
         local_log = '.metazoo-log'
         fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log + str(config.server_id)))
         return True
         # return srv.run(config)
     else:
-        pass #TODO: Construct client to run
+        experiment = Experiment.load()
+        #TODO
+        if config.host == None:
+            raise RuntimeError('Oh oh , should not happen')
+        experiment.experiment_client(config.host)
         return True

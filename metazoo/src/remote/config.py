@@ -27,3 +27,11 @@ class ServerConfig(object):
         self.log4j_dir = None
         # Properties to hand to log4j
         self.log4j_properties = None
+
+
+class ClientConfig(object):
+    def __init__(self, config, client_id):
+        super(ClientConfig, self).__init__()
+        self.cnf = config
+        self.client_id = client_id 
+        self.host = 'node' + config.servers[0] + ':2181'
