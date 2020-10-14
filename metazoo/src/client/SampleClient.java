@@ -13,22 +13,32 @@ public class SampleClient {
 
 	public static void run() {
 		//do stuff like creating zNodes and stuff
+		String path = "/JustAnotherZnode";
+		byte [] data = "I am written from Client code!".getBytes();
+		nodes.create(path, data); 
+
+		if (nodes.exists(path)) {
+			System.out.println("The Znode exists, yay!");
+		} else {
+			System.out.println("Oh oh, something is wrong...");
+		}
 
 	}
 
 	public static void main(String[] args) {
-		//connect with host
+		if (args.length != 1) {
+			System.out.println("[ERROR] expected one argument");
+			exit(1);
+		}
+		String host = args[0];
 		try {
 			conn = new ZooKeeperConnection();
-			//TODO: change by zookeeper server address 
-			zoo = conn.connect("localhost");
+			zoo = conn.connect(host);
 			nodes = new ZnodeManager(zoo);
-			//TODO: parameters and stuff
 			run();
 			conn.close();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		//run
 	}
 }
