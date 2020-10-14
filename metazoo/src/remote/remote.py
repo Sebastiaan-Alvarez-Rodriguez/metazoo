@@ -39,9 +39,7 @@ def construct_config():
     get_node_assignment(config)
     if is_server(config):
         return ServerConfig(config, get_server_id(config))
-    else:
-        pass #TODO: Does a client need configuration?
-    return config
+    return ClientConfig(config)
 
 
 def run():

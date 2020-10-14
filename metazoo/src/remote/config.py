@@ -30,8 +30,7 @@ class ServerConfig(object):
 
 
 class ClientConfig(object):
-    def __init__(self, config, client_id):
+    def __init__(self, config):
         super(ClientConfig, self).__init__()
         self.cnf = config
-        self.client_id = client_id 
         self.host = 'node' + config.servers[0] + ':2181'
