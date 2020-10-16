@@ -52,4 +52,4 @@ def get_remote_prj_dir():
 
 #################### Node directories ####################
 def get_node_log_dir():
-    return os.environ['HOME']
+    return '/local/ddps2009/'

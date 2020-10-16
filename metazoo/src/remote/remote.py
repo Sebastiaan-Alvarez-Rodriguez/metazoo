@@ -2,9 +2,11 @@ import socket
 import os
 
 from dynamic.experiment import Experiment
-from remote.config import Config, ServerConfig
+from remote.config import Config, ServerConfig, ClientConfig
 import remote.server as srv
 import util.fs as fs
+import util.location as loc
+import time
 
 def get_remote():
     return 'dpsdas5LU'
@@ -48,10 +50,15 @@ def run():
         experiment = Experiment.load()
         if config.server_id == None:
             raise RuntimeError('Oh oh , should not happen')
+        srv.populate_config(config)
+        srv.gen_zookeeper_config(config)
         executor = srv.boot_server(config)    
         experiment.experiment_server(config.server_id)
         srv.stop_server(executor)
+        #TODO: fix
         local_log = '.metazoo-log'
+        if not fs.exists(loc.get_metazoo_log_dir()):
+            fs.mkdir(loc.get_metazoo_log_dir())
         fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log + str(config.server_id)))
         return True
         # return srv.run(config)
@@ -60,5 +67,6 @@ def run():
         #TODO
         if config.host == None:
             raise RuntimeError('Oh oh , should not happen')
+        time.sleep(10)
         experiment.experiment_client(config.host)
         return True

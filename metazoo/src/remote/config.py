@@ -33,4 +33,4 @@ class ClientConfig(object):
     def __init__(self, config):
         super(ClientConfig, self).__init__()
         self.cnf = config
-        self.host = 'node' + config.servers[0] + ':2181'
+        self.host = 'node' + str(config.servers[0]) + ':2181'
