@@ -58,7 +58,7 @@ clientPort={4}
 
 
 # Starts Zookeeper, returns immediately after starting a thread containing our process
-def boot_server(config):
+def boot(config):
     # return os.system('bash {0} start &'.format(fs.join(get_remote_bin_dir(), 'zkServer.sh'))) == 0
 
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
@@ -83,9 +83,5 @@ def boot_server(config):
 
 
 # Stops Zookeeper instance
-def stop_server(executor):
+def stop(executor):
     return executor.stop()
-
-
-def run(config):
-    return True

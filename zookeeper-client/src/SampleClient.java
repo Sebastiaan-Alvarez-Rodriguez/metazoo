@@ -1,7 +1,7 @@
 // https://www.tutorialspoint.com/zookeeper/zookeeper_api.htm
 // TODO: imports and stuff
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.KeeperException;
 
 public class SampleClient {
 	private static ZooKeeper zoo;

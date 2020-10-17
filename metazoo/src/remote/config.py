@@ -9,8 +9,6 @@ class Config(object):
         # List of client node numbers
         self.clients = None
 
-        self.num_servers = parser.num_servers
-        self.num_clients = parser.num_clients
         self.server_infiniband = parser.servers_use_infiniband
         self.client_infiniband = parser.clients_use_infiniband
 

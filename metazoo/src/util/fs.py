@@ -51,6 +51,9 @@ def join(directory, *args):
         returnstring = os.path.join(returnstring, str(arg))
     return returnstring
 
+def ln(pointedloc, pointerloc, is_dir=None):
+    os.symlink(pointedloc, pointerloc, target_is_directory=isdir(pointedloc) if is_dir == None else is_dir)
+
 def ls(directory, only_files=False, only_dirs=False, full_paths=False, *args):
     if only_files and only_dirs:
         raise ValueError('Cannot ls only files and only directories')

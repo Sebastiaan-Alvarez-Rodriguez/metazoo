@@ -62,6 +62,8 @@ def compile():
 
     if statuscode == 0:
         print('Compilation completed!')
+    else:
+        print('Compilation failed!')
     return statuscode == 0
 
 
@@ -86,7 +88,7 @@ def exec(force_comp=False, override_conf=False):
     experiment = exp.get_experiment()
     num_nodes_total = experiment.num_servers + experiment.num_clients
 
-    command = 'prun -np {0} -1 python3 {1} --exec_internal'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'))
+    command = 'prun -np {} -1 python3 {} --exec_internal'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'))
     print('Booting network...', flush=True)
 
     experiment.pre_experiment()
@@ -101,27 +103,34 @@ def exec(force_comp=False, override_conf=False):
 def export(full_exp=False):
     print('Copying files using "{}" strategy...'.format('full' if full_exp else 'fast'))
     if full_exp:
-        command = 'rsync -az {0} {1}:{2} {3} {4}'.format(
+        command = 'rsync -az {} {}:{} {} {} {}'.format(
             fs.dirname(fs.abspath()),
             rmt.get_remote(),
             loc.get_remote_dir(),
             '--exclude .git',
-            '--exclude __pycache__')
+            '--exclude __pycache__',
+            '--exclude zookeeper-client')
         if not clean():
             print('[FAILURE] Cleaning failed')
             return False
     else:
         print('[Note] This means we skip zookeeper-release-3.3.0 files.')
-        command = 'rsync -az {0} {1}:{2} {3} {4} {5} {6}'.format(
+        command = 'rsync -az {} {}:{} {} {} {} {} {}'.format(
             fs.dirname(fs.abspath()),
             rmt.get_remote(),
             loc.get_remote_dir(),
             '--exclude zookeeper-release-3.3.0',
+            '--exclude zookeeper-client',
             '--exclude deps',
             '--exclude .git',
             '--exclude __pycache__')
 
-    return os.system(command) == 0
+    if os.system(command) == 0:
+        print('Export success!')
+        return True
+    else:
+        print('Export failure!')
+        return False    
 
 
 def _init_internal():

@@ -52,9 +52,9 @@ class Experiment(object):
         return self.instance.experiment_client(self._metazoo)
 
     
-    def experiment_server(self, client_or_server_id):
+    def experiment_server(self, server_id):
         self._metazoo = MetaZoo.load() # Inside server node, must load persisted state
-        self._metazoo._id = client_or_server_id
+        self._metazoo._id = server_id
         return self.instance.experiment_server(self._metazoo)
 
 

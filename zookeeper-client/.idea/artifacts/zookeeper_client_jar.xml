@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact name="zookeeper-client:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/zookeeper_client_jar</output-path>
+    <root id="root">
+      <element id="archive" name="zookeeper-client.jar">
+        <element id="module-output" name="zookeeper-client" />
+      </element>
+      <element id="library" level="project" name="zookeeper-3.3.0" />
+      <element id="library" level="project" name="log4j-1.2.15" />
+    </root>
+  </artifact>
+</component>
