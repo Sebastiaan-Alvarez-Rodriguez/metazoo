@@ -1,6 +1,7 @@
 from experiments.interface import ExperimentInterface
 import remote.server as srv
 import util.fs as fs
+import util.location as loc
 import os
 import time
 
@@ -31,7 +32,8 @@ class ExampleExperiment(ExperimentInterface):
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
         print('Hello from client, I will connect to:{}.'.format(metazoo.host))
-        os.system('java -jar {0} {1}'.format(self.get_client_loc(), metazoo.host))
+        classpath = fs.join(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
+        os.system('java -cp "{}" -jar {} {}'.format(classpath, self.get_client_loc(), metazoo.host))
         
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
