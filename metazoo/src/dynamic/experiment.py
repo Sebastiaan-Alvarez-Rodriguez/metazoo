@@ -65,7 +65,6 @@ class Experiment(object):
 
     # Save all required information, so nodes can reconstruct our object
     def persist(self):
-        print('I MUST Persist NOW')
         self._metazoo.persist()
         with open(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), 'w') as file:
             file.write('{}|{}'.format(self.location, self.modulename))
@@ -80,7 +79,6 @@ class Experiment(object):
     # Cleans persisted information
     @staticmethod
     def clean():
-        print('I MUST CLEAN NOW')
         fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'))
 
 
