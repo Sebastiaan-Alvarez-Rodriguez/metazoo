@@ -52,8 +52,6 @@ def run():
         srv.populate_config(config)
         srv.gen_zookeeper_config(config)
 
-        while not input('press "n" to continue: ') == 'n':
-            print()
         print('Server with id {} generated {}.cfg'.format(config.server_id, config.server_id), flush=True)
         executor = srv.boot(config)
 
@@ -68,14 +66,11 @@ def run():
         return True
         # return srv.run(config)
     else:
-        # executor = cli.boot(config)
-
-        # experiment.experiment_client(config.host)
-        
-        # cli.stop(executor)
+        time.sleep(4)
+        executor = cli.boot(config)
+        experiment.experiment_client(config.host)
+        cli.stop(executor)
 
         if config.host == None:
             raise RuntimeError('Oh oh , should not happen')
-        # time.sleep(10)
-        # experiment.experiment_client(config.host)
         return True

@@ -18,6 +18,8 @@ def prepare_classpath_symlinks():
         fs.join(loc.get_build_lib_dir(), 'log4j-1.2.15.jar'),
         fs.join(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
     ]
+
+    fs.mkdir(fs.join(loc.get_metazoo_dep_dir(), 'example_client'), exist_ok=True)
     for path in locations:
         dst = fs.join(loc.get_metazoo_dep_dir(), 'example_client', fs.basename(path))
         if not fs.exists(dst):

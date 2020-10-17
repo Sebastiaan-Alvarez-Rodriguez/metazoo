@@ -21,8 +21,8 @@ class Experiment(object):
     def num_servers(self):
         if self._num_servers == None:
             self._num_servers = self.instance.num_servers()
-            if self._num_servers < 0:
-                raise RuntimeError('Experiment must specify num_servers > 0 (currently got {})'.format(self._num_servers))
+            if self._num_servers < 2:
+                raise RuntimeError('Experiment must specify num_servers >=2 (currently got {})'.format(self._num_servers))
         return self._num_servers
 
 
@@ -30,8 +30,8 @@ class Experiment(object):
     def num_clients(self):
         if self._num_clients == None:
             self._num_clients = self.instance.num_clients()
-            if self._num_clients < 0:
-                raise RuntimeError('Experiment must specify num_clients > 0 (currently got {})'.format(self._num_clients))
+            if self._num_clients < 1:
+                raise RuntimeError('Experiment must specify num_clients >=1 (currently got {})'.format(self._num_clients))
         return self._num_clients
     
     @property
@@ -65,6 +65,7 @@ class Experiment(object):
 
     # Save all required information, so nodes can reconstruct our object
     def persist(self):
+        print('I MUST Persist NOW')
         self._metazoo.persist()
         with open(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), 'w') as file:
             file.write('{}|{}'.format(self.location, self.modulename))
@@ -79,6 +80,7 @@ class Experiment(object):
     # Cleans persisted information
     @staticmethod
     def clean():
+        print('I MUST CLEAN NOW')
         fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'))
 
 

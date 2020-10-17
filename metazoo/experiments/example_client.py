@@ -15,7 +15,7 @@ class ExampleExperiment(ExperimentInterface):
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
-        return 1
+        return 2
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
@@ -29,13 +29,13 @@ class ExampleExperiment(ExperimentInterface):
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
         print('Hello from client, I will connect to:{}.'.format(metazoo.host))
-        time.sleep(60) #Client remains active for 60 seconds
+        time.sleep(8) #Client remains active for a while
         
 
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
         print('I am server {}, and I am running ZooKeeper now...'.format(metazoo.id))
-        time.sleep(60) #Server remains active for 60 seconds
+        time.sleep(8) #Server remains active for a while
 
 
     def post_experiment(self, metazoo):
