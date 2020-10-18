@@ -32,3 +32,4 @@ class ClientConfig(object):
         super(ClientConfig, self).__init__()
         self.cnf = config
         self.host = 'node' + str(config.servers[0]) + ':2181'
+        self.log4j_dir = None

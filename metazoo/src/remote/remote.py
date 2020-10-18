@@ -59,18 +59,22 @@ def run():
         
         srv.stop(executor)
         #TODO: fix
-        # local_log = '.metazoo-log'
-        # if not fs.exists(loc.get_metazoo_log_dir()):
-        #     fs.mkdir(loc.get_metazoo_log_dir())
-        # fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log + str(config.server_id)))
         return True
         # return srv.run(config)
     else:
         time.sleep(4)
+        cli.populate_config(config)
         executor = cli.boot(config)
-        experiment.experiment_client(config.host)
-        cli.stop(executor)
 
         if config.host == None:
             raise RuntimeError('Oh oh , should not happen')
+
+        experiment.experiment_client(config.host)
+        cli.stop(executor)
+
+        local_log = '.metazoo-log'
+        if not fs.exists(loc.get_metazoo_log_dir()):
+            fs.mkdir(loc.get_metazoo_log_dir())
+            #TODO: client id?
+        fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log + '0'))
         return True

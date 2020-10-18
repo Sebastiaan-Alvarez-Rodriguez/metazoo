@@ -18,8 +18,8 @@ def nodenr_to_infiniband(nodenr):
 # Populates uninitialized config members
 def populate_config(config):
     config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_dir(), config.server_id)
-    config.log4j_loc = loc.get_cfg_dir()
-    config.log4j_properties = 'ERROR,CONSOLE' # Log INFO-level information, send to console
+    config.log4j_loc = loc.get_server_cfg_dir()
+    config.log4j_properties = 'INFO,CONSOLE' # Log INFO-level information, send to console
 
 
 # Generates the Zookeeper config file for this server instance.

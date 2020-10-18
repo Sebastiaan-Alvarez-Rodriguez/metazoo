@@ -29,13 +29,13 @@ class ExampleExperiment(ExperimentInterface):
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
         print('Hello from client, I will connect to:{}.'.format(metazoo.host))
-        time.sleep(8) #Client remains active for a while
+        time.sleep(40) #Client remains active for a while
         
 
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
         print('I am server {}, and I am running ZooKeeper now...'.format(metazoo.id))
-        time.sleep(8) #Server remains active for a while
+        time.sleep(30) #Server remains active for a while
 
 
     def post_experiment(self, metazoo):
