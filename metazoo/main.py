@@ -71,7 +71,7 @@ def _exec_internal():
     return rmt.run()
 
 
-def exec(force_comp=False, override_conf=False):
+def exec(force_comp=False):
     print('Connected!', flush=True)
     if (force_comp or not is_compiled()):
         if not compile():
@@ -155,12 +155,12 @@ This way, you will not be asked for your password at every command.
         print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
 
-def remote(force_exp=False, force_comp=False, override_conf=False):
+def remote(force_exp=False, force_comp=False):
     if force_exp and not export(full_exp=True):
         print('[FAILURE] Could not export data')
         return False
 
-    program = '--exec'+(' -c' if force_comp else '')+(' -o' if override_conf else '')
+    program = '--exec'+(' -c' if force_comp else '')
 
     command = 'ssh {0} "python3 {1}/metazoo/main.py {2}"'.format(
         st.ssh_key_name,
@@ -189,7 +189,6 @@ def main():
     group.add_argument('--settings', help='Change settings', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
     parser.add_argument('-e', '--force-export', dest='force_exp', help='Forces to re-do the export phase', action='store_true')
-    parser.add_argument('-o', '--override-conf', dest='override_conf', help='Forces MetaZoo to ignore existing configs', action='store_true')
     args = parser.parse_args()
 
 
@@ -202,7 +201,7 @@ def main():
     elif args.exec_internal:
         _exec_internal()
     elif args.exec:
-        exec(force_comp=args.force_comp, override_conf=args.override_conf)
+        exec(force_comp=args.force_comp)
     elif args.export:
         export(full_exp=True)
     elif args.init_internal:
@@ -210,7 +209,7 @@ def main():
     elif args.init:
         init()
     elif args.remote:
-        remote(force_exp=args.force_exp, force_comp=args.force_comp, override_conf=args.override_conf)
+        remote(force_exp=args.force_exp, force_comp=args.force_comp)
     elif args.settings:
         settings()
 
