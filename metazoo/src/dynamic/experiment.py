@@ -15,25 +15,41 @@ class Experiment(object):
         self._metazoo = MetaZoo()
         self._num_servers = None
         self._num_clients = None
+        self._servers_use_infiniband = None
+        self._clients_use_infiniband = None
 
 
     @property
     def num_servers(self):
         if self._num_servers == None:
-            self._num_servers = self.instance.num_servers()
+            self._num_servers = int(self.instance.num_servers())
             if self._num_servers < 2:
                 raise RuntimeError('Experiment must specify num_servers >=2 (currently got {})'.format(self._num_servers))
         return self._num_servers
 
-
     @property
     def num_clients(self):
         if self._num_clients == None:
-            self._num_clients = self.instance.num_clients()
+            self._num_clients = int(self.instance.num_clients())
             if self._num_clients < 1:
                 raise RuntimeError('Experiment must specify num_clients >=1 (currently got {})'.format(self._num_clients))
         return self._num_clients
     
+    @property
+    def servers_use_infiniband(self):
+        if self._servers_use_infiniband == None:
+            self._servers_use_infiniband = bool(self.instance.servers_use_infiniband())
+        return self._servers_use_infiniband
+
+
+    def clients_use_infiniband(self):
+        if self._clients_use_infiniband == None:
+            self._clients_use_infiniband = bool(self.instance.clients_use_infiniband())
+        return self._clients_use_infiniband
+
+
+
+
     @property
     def metazoo(self):
         return self._metazoo

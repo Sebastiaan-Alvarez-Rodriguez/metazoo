@@ -16,6 +16,9 @@ class MetaZoo(object):
     def id(self):
         return self._id
     
+    @id.setter
+    def set_id(self):
+        raise RuntimeError('You cannot set the id yourself!')
 
     # Function to completely prohibit changing (i.e. writing, updating, deleting) MetaZoo register
     def lock():
@@ -33,7 +36,7 @@ class MetaZoo(object):
 
     # Function to persist this instance using pickling
     def persist(self):
-        with open(fs.join(loc.get_remote_prj_dir(), '.hidden.persist.pickle'), 'wb') as file:
+        with open(fs.join(loc.get_remote_metazoo_dir(), '.hidden.persist.pickle'), 'wb') as file:
             try:
                 pickle.dump(self, file, pickle.HIGHEST_PROTOCOL)
             except Exception as e:
@@ -44,7 +47,7 @@ class MetaZoo(object):
     # Function to load persisted object using pickling
     @staticmethod
     def load():
-        location = fs.join(loc.get_remote_prj_dir(), '.hidden.persist.pickle')
+        location = fs.join(loc.get_remote_metazoo_dir(), '.hidden.persist.pickle')
         if not fs.isfile(location):
             raise RuntimeError('Temporary state file not found at {}'.format(location))
         with open(location, 'rb') as file:
@@ -57,4 +60,4 @@ class MetaZoo(object):
 
     @staticmethod
     def clean():
-        fs.rm(fs.join(loc.get_remote_prj_dir(), '.hidden.persist.pickle'), ignore_errors=True)
+        fs.rm(fs.join(loc.get_remote_metazoo_dir(), '.hidden.persist.pickle'), ignore_errors=True)

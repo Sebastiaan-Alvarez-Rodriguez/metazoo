@@ -13,6 +13,7 @@ def check_version(minVersion=8, maxVersion=8):
     returncode = True
     if not 'JAVA_HOME' in os.environ:
         print('JAVA_HOME is not set. Please set this environment variable to point to your Java installation directory.')
+        print('Note: Java is commonly installed in /usr/lib/jvm/...')
         returncode = False
     elif not fs.isfile(os.environ['JAVA_HOME'], 'bin', 'java'):
         print('Incorrect JAVA_HOME set: Cannot reach JAVA_HOME/bin/java ({0}/bin/java'.format(os.environ['JAVA_HOME']))

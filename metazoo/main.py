@@ -6,8 +6,8 @@ import argparse
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
 import dynamic.experiment as exp
-import parse.parser as psr
 import remote.remote as rmt
+from settings.settings import settings_instance as st
 import supplier.ant as ant
 import supplier.java as jv
 import util.location as loc
@@ -80,10 +80,6 @@ def exec(force_comp=False, override_conf=False):
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
 
-    if override_conf:
-        psr.gen_config()
-    else:
-        psr.check_config() # Check configuration file and ask questions is necessary
     print('Loading experiment...', flush=True)
     experiment = exp.get_experiment()
     num_nodes_total = experiment.num_servers + experiment.num_clients
@@ -101,12 +97,12 @@ def exec(force_comp=False, override_conf=False):
 
 
 def export(full_exp=False):
-    print('Copying files using "{}" strategy...'.format('full' if full_exp else 'fast'))
+    print('Copying files using "{}" strategy, using key "{}"...'.format('full' if full_exp else 'fast', st.ssh_key_name))
     if full_exp:
         command = 'rsync -az {} {}:{} {} {} {}'.format(
             fs.dirname(fs.abspath()),
-            rmt.get_remote(),
-            loc.get_remote_dir(),
+            st.ssh_key_name,
+            loc.get_remote_metazoo_parent_dir(),
             '--exclude .git',
             '--exclude __pycache__',
             '--exclude zookeeper-client')
@@ -117,8 +113,8 @@ def export(full_exp=False):
         print('[Note] This means we skip zookeeper-release-3.3.0 files.')
         command = 'rsync -az {} {}:{} {} {} {} {} {}'.format(
             fs.dirname(fs.abspath()),
-            rmt.get_remote(),
-            loc.get_remote_dir(),
+            st.ssh_key_name,
+            loc.get_remote_parent_dir(),
             '--exclude zookeeper-release-3.3.0',
             '--exclude zookeeper-client',
             '--exclude deps',
@@ -137,8 +133,8 @@ def _init_internal():
     print('Connected!', flush=True)
     if not compile():
         print('[FAILURE] Could not compile code on DAS5!')
-        return False
-    return True
+        exit(1)
+    exit(0)
 
 
 def init():
@@ -150,11 +146,11 @@ This way, you will not be asked for your password at every command.
 ''')
     print('Initializing MetaZoo...')
     if not export(full_exp=True):
-        print('[FAILURE] Unable to export to DAS5 remote using user/ssh-key "{}"'.format(rmt.get_remote()))
+        print('[FAILURE] Unable to export to DAS5 remote using user/ssh-key "{}"'.format(st.ssh_key_name))
         return False
-    print('Connecting to {0}...'.format(rmt.get_remote()))
+    print('Connecting using key "{0}"...'.format(st.ssh_key_name))
 
-    tmp = os.system('ssh {0} "python3 {1}/zookeeper/metazoo/main.py --init_internal"'.format(rmt.get_remote(), loc.get_remote_dir())) == 0
+    tmp = os.system('ssh {0} "python3 {1}/metazoo/main.py --init_internal"'.format(st.ssh_key_name, loc.get_remote_metazoo_dir())) == 0
     if tmp:
         print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
@@ -166,12 +162,16 @@ def remote(force_exp=False, force_comp=False, override_conf=False):
 
     program = '--exec'+(' -c' if force_comp else '')+(' -o' if override_conf else '')
 
-    command = 'ssh {0} "python3 {1}/zookeeper/metazoo/main.py {2}"'.format(
-        rmt.get_remote(),
-        loc.get_remote_dir(),
+    command = 'ssh {0} "python3 {1}/metazoo/main.py {2}"'.format(
+        st.ssh_key_name,
+        loc.get_remote_metazoo_dir(),
         program)
-    print('Connecting to {0}...'.format(rmt.get_remote()))
+    print('Connecting using key "{0}"...'.format(st.ssh_key_name))
     return os.system(command) == 0
+
+
+def settings():
+    st.change_settings()
 
 
 def main():
@@ -186,6 +186,7 @@ def main():
     group.add_argument('--init_internal', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--init', help='Initialize MetaZoo to run code on the DAS5', action='store_true')
     group.add_argument('--remote', help='execute code on the DAS5 from your local machine', action='store_true')
+    group.add_argument('--settings', help='Change settings', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
     parser.add_argument('-e', '--force-export', dest='force_exp', help='Forces to re-do the export phase', action='store_true')
     parser.add_argument('-o', '--override-conf', dest='override_conf', help='Forces MetaZoo to ignore existing configs', action='store_true')
@@ -210,7 +211,8 @@ def main():
         init()
     elif args.remote:
         remote(force_exp=args.force_exp, force_comp=args.force_comp, override_conf=args.override_conf)
-    
+    elif args.settings:
+        settings()
 
     if len(sys.argv) == 1:
         parser.print_help()

@@ -21,6 +21,14 @@ class ExampleExperiment(ExperimentInterface):
         '''get amount of client nodes to allocate'''
         return 1
 
+    def servers_use_infiniband(self):
+        '''True if servers must communicate with eachother over infiniband, False otherwise'''
+        return False
+
+    def clients_use_infiniband(self):
+        '''True if clients must communicate with servers over infinband, False otherwise'''
+        return False
+
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
