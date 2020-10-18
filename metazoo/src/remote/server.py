@@ -5,8 +5,10 @@ import os
 
 import util.fs as fs
 import util.location as loc
-from remote.executor import Executor
 from remote.config import ServerConfig
+from remote.executor import Executor
+import remote.identifier as idr
+
 
 def nodenr_to_infiniband(nodenr):
     return '10.149.1.'+str(nodenr)[1:]
@@ -15,7 +17,7 @@ def nodenr_to_infiniband(nodenr):
 
 # Populates uninitialized config members
 def populate_config(config):
-    config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_crawlspace_dir(), config.s_id)
+    config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_crawlspace_dir(), config.cnf.gid)
     config.log4j_loc = loc.get_cfg_dir()
     config.log4j_properties = 'ERROR,CONSOLE' # Log INFO-level information, send to console
 
@@ -26,11 +28,20 @@ def gen_zookeeper_config(config):
     port_to_leader = 2182
     port_to_elect  = 2183
     
-    # This list should be the same everywhere
+    # This list should be the same everywhere. End goal:
+    # server.0=<ip1>:2182:2183 #share node1
+    # server.1=<ip1>:2184:2185 #share node1
+    # server.2=<ip2>:2182:2183 #share node2
+    # server.3=<ip2>:2184:2185 #share node2
     serverlist = []
-    for idx, nodenumber in enumerate(config.cnf.servers):
-        node = nodenr_to_infiniband(nodenumber) if config.cnf.server_infiniband else 'node{}'.format(nodenumber)
-        serverlist.append('server.{0}={1}:{2}:{3}'.format(idx+1, node, port_to_leader, port_to_elect))
+    srv_id = 0
+    for x in range(idr.num_nodes()):
+        addr = nodenr_to_infiniband(config.cnf.servers[x]) if config.cnf.server_infiniband else 'node{}'.format(config.cnf.servers[x])
+        for y in range(idr.num_procs_per_node()):
+            ptl = port_to_leader + 2*y
+            pte = port_to_elect + 2*y
+            serverlist.append('server.{0}={1}:{2}:{3}'.format('localhost' if idr.identifier_global() == x else srv_id, addr, ptl, pte))
+            srv_id += 1
 
     ticktime         = 2000
     initlimit        = 10
@@ -51,7 +62,7 @@ clientPort={4}
     clientport,
     '\n'.join(serverlist))
 
-    with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.s_id)), 'w') as file:
+    with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.cnf.gid)), 'w') as file:
         file.write(config_string)
 
 
@@ -66,7 +77,7 @@ def boot(config):
 
     classpath = '{}:{}'.format(prefix, classpath)
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
-    conf_location = fs.join(loc.get_cfg_dir(), str(config.s_id)+'.cfg')
+    conf_location = fs.join(loc.get_cfg_dir(), str(config.cnf.gid)+'.cfg')
 
     command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}"'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location)
     executor = Executor(command)
@@ -74,7 +85,7 @@ def boot(config):
 
     fs.mkdir(config.datadir, exist_ok=True)
     with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
-        file.write(str(config.s_id))
+        file.write(str(config.cnf.gid))
     return executor
 
 
