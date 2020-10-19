@@ -46,8 +46,8 @@ public class FailureClient {
                    try {
                        ++operations;
                        nodes.setData_async(node_name, data, this);
-                   } catch (Exception e) {
-                       LOG.error(e.getMessage());
+                   } catch (Exception ignored) {
+                       //LOG.error(e.getMessage());
                    }
                }
            }
@@ -87,8 +87,8 @@ public class FailureClient {
             for(Integer i : ops)
                 writer.write("ops: "+i.toString()+"\n");
             writer.close();
-        } catch (IOException e) {
-            LOG.error(e.getMessage());
+        } catch (IOException ignored) {
+            //LOG.error(e.getMessage());
         }
     }
 

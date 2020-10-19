@@ -25,13 +25,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58be2408-ab0a-48ed-9141-9ebf471ec33b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../metazoo/deps/example_client/zookeeper-client.jar" beforeDir="false" afterPath="$PROJECT_DIR$/../metazoo/deps/example_client/zookeeper-client.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/artifacts/zookeeper_client_jar/zookeeper-client.jar" beforeDir="false" afterPath="$PROJECT_DIR$/out/artifacts/zookeeper_client_jar/zookeeper-client.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient$1MyDataCallback.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient$1MyDataCallback.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient$1MyStatCallback.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient$1MyStatCallback.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/zookeeper-client/FailureClient.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/FailureClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FailureClient.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
