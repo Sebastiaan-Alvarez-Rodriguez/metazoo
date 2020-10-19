@@ -63,6 +63,7 @@ class ServerConfig(Config):
         self._datadir = None
         # Directory where log4j writes its logs, if we specify that log4j should write to file
         self._log4j_dir = None
+        self._log4j_properties = None
 
     @property
     def server_infiniband(self):
@@ -100,12 +101,22 @@ class ServerConfig(Config):
     def log4j_dir(self, value):
         self._log4j_dir = value
 
+    @property
+    def log4j_properties(self):
+        return self._log4j_properties
+    
+    @log4j_properties.setter
+    def log4j_properties(self, value):
+        self._log4j_properties = value
+
 
 class ClientConfig(Config):
     def __init__(self, experiment, nodes, hosts):
         super(ClientConfig, self).__init__(experiment, nodes)
         self._hosts = hosts
-        self._log4j_dir = None #TODO: Used?
+        self._log4j_dir = None
+        self._log4j_properties = None
+
 
     @property
     def server_infiniband(self):
@@ -139,3 +150,10 @@ class ClientConfig(Config):
     def log4j_dir(self, value):
         self._log4j_dir = value
     
+    @property
+    def log4j_properties(self):
+        return self._log4j_properties
+    
+    @log4j_properties.setter
+    def log4j_properties(self, value):
+        self._log4j_properties = value

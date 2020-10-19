@@ -9,12 +9,15 @@ import util.fs as fs
 import util.location as loc
 from remote.executor import Executor
 from remote.config import ServerConfig
+from settings.settings import settings_instance as st
+
 
 def nodenr_to_infiniband(nodenr):
     return '10.149.1.'+str(nodenr)[1:]
 
-def populate_config(config):
+def populate_config(config, debug_mode):
     config.log4j_dir = loc.get_client_cfg_dir()
+    config.log4j_properties = 'INFO, CONSOLE' if debug_mode else 'ERROR, CONSOLE'
 
 def prepare_classpath_symlinks():
     locations = [
@@ -34,17 +37,19 @@ def client_distribute_get(config):
     return serverlist[config.gid % len(serverlist)]
 
 # Starts Zookeeper, returns immediately after starting a thread containing our process
-def boot(config, debug_mode):
+def boot(config):
     prepare_classpath_symlinks()
     propfile = fs.join(config.log4j_dir, 'log4j.properties')
-    print('CLIENT.PY:40: Propfile: {}. Exists: {}'.format(propfile, fs.isfile(propfile)))
     host = client_distribute_get(config)
     
-    command = 'java -Dlog4j.configuration=file:"{}" -jar {} {} {}'.format(
+
+    command = 'java -Dlog4j.configuration=file:"{}" "-Duser={}" "-Dprops={}" -jar {} {} {}'.format(
         propfile,
-        fs.join(loc.get_metazoo_dep_dir(),
-            'example_client',
-            'zookeeper-client.jar'), host, config.gid)
+        st.ssh_user_name,
+        config.log4j_properties,
+        fs.join(loc.get_metazoo_dep_dir(), 'example_client', 'zookeeper-client.jar'),
+        host,
+        config.gid)
 
     executor = Executor(command)
     executor.run(shell=True)

@@ -16,10 +16,10 @@ def run_server(debug_mode):
         with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'w') as file:
             file.write('\n'.join(srv.gen_connectionlist(config)))
 
-    srv.populate_config(config)
+    srv.populate_config(config, debug_mode)
     srv.gen_zookeeper_config(config)
 
-    executor = srv.boot(config, debug_mode)
+    executor = srv.boot(config)
 
     experiment.experiment_server(config, executor)
     
@@ -38,13 +38,13 @@ def run_client(debug_mode):
 
     with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'r') as file:
         # server.0=<ip1>:<clientport> --> <ip1>:<clientport>
-        hosts = [line.split('=')[1] for line in file.readlines()]
+        hosts = [line.split('=')[1].strip() for line in file.readlines()]
 
     config = config_construct_client(experiment, hosts)
-    cli.populate_config(config)
+    cli.populate_config(config, debug_mode)
     time.sleep(4)
 
-    executor = cli.boot(config, debug_mode)
+    executor = cli.boot(config)
     experiment.experiment_client(config, executor)
     status = cli.stop(executor)
 

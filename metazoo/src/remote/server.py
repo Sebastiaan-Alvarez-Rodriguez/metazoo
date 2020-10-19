@@ -16,9 +16,10 @@ def nodenr_to_infiniband(nodenr):
 
 
 # Populates uninitialized config members
-def populate_config(config):
+def populate_config(config, debug_mode):
     config.datadir   = '{}/mahadev/zookeeper/server{}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
     config.log4j_dir = loc.get_server_cfg_dir()
+    config.log4j_properties = 'INFO, CONSOLE' if debug_mode else 'ERROR, CONSOLE'
 
 def gen_connectionlist(config):
     # End goal:
@@ -87,7 +88,7 @@ clientPort={4}
         file.write(config_string)
 
 
-def boot(config, debug_mode):
+def boot(config):
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
     prefix = ':'.join([
         loc.get_cfg_dir(),
@@ -100,12 +101,12 @@ def boot(config, debug_mode):
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
     conf_location = fs.join(loc.get_cfg_dir(), str(config.gid)+'.cfg')
 
-    command = 'java "-Dzookeeper.log.dir={}" -cp "{}" {} "{}" {}'.format(
+    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" -cp "{}" {} "{}"'.format(
         config.log4j_dir,
+        config.log4j_properties,
         classpath, 
         zoo_main, 
-        conf_location, 
-        '> /dev/null 2>&1' if not debug_mode else '')
+        conf_location)
     executor = Executor(command)
     executor.run(shell=True)
 
