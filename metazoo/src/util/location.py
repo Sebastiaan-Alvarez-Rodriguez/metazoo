@@ -1,19 +1,16 @@
 import util.fs as fs
-import os
+from settings.settings import settings_instance as st
 
 #################### MetaZoo directories ####################
-
 def get_metazoo_dep_dir():
     return fs.join(fs.abspath(), 'deps')
-
-def get_metazoo_config_dir():
-    return fs.join(fs.abspath())
 
 def get_metazoo_experiment_dir():
     return fs.join(fs.abspath(), 'experiments')
 
 def get_metazoo_log_dir():
     return fs.join(fs.abspath(), 'logs')
+
 
 #################### Zookeeper directories ####################
 def get_zookeeper_dir():
@@ -40,6 +37,7 @@ def get_lib_dir():
 def get_build_lib_dir():
     return fs.join(get_build_dir(), 'lib')
 
+
 #################### Ant directories ####################
 def get_ant_loc_dep():
     return fs.join(get_metazoo_dep_dir(), 'ant')
@@ -48,14 +46,18 @@ def get_ant_loc_bin():
     return fs.join(get_ant_loc_dep(), 'bin', 'ant')
 
 
-
 #################### Remote directories ####################
-def get_remote_dir():
-    return '/var/scratch/ddps2009/'
+def get_remote_metazoo_parent_dir():
+    return st.remote_metazoo_dir
 
-def get_remote_prj_dir():
-    return fs.join(get_remote_dir(), 'zookeeper')
+def get_remote_metazoo_dir():
+    return fs.join(get_remote_metazoo_parent_dir(), 'zookeeper')
+
+def get_remote_crawlspace_dir():
+    return fs.join(st.remote_crawlspace_dir, 'crawlspace')
+
 
 #################### Node directories ####################
+# Because we  will use client logging using plan 2, this should change
 def get_node_log_dir():
-    return '/local/ddps2009/'
+    return '/local/{}/'.format(st.ssh_user_name)

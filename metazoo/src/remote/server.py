@@ -2,13 +2,13 @@
 # The goal is to boot a zookeeper server, and make sure it knows of the other ones
 
 import os
-import socket
-import time
 
 import util.fs as fs
 import util.location as loc
-from remote.executor import Executor
 from remote.config import ServerConfig
+from remote.executor import Executor
+import remote.identifier as idr
+
 
 def nodenr_to_infiniband(nodenr):
     return '10.149.1.'+str(nodenr)[1:]
@@ -17,27 +17,57 @@ def nodenr_to_infiniband(nodenr):
 
 # Populates uninitialized config members
 def populate_config(config):
-    config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_dir(), config.server_id)
-    config.log4j_loc = loc.get_server_cfg_dir()
-    config.log4j_properties = 'INFO,CONSOLE' # Log INFO-level information, send to console
+    config.datadir   = '{}/mahadev/zookeeper/server{}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
+    config.log4j_dir = loc.get_server_cfg_dir()
+
+def gen_connectionlist(config):
+    # End goal:
+    # server.0=<ip1>:<clientport1> #share node1
+    # server.1=<ip1>:<clientport2> #share node1
+    # server.2=<ip2>:<clientport1> #share node2
+    # server.3=<ip2>:<clientport2> #share node2
+    # If we are server 1, then server.0 should have 'localhost' instead of <ip1>
+    clientport = 2181
+    serverlist = []
+    srv_id = 0
+    for x in range(len(config.nodes) // idr.num_procs_per_node()):
+        addr = nodenr_to_infiniband(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
+        for y in range(idr.num_procs_per_node()):
+            cport = clientport + (idr.num_procs_per_node()+1)*y
+            serverlist.append('server.{}={}:{}'.format(srv_id, addr, cport))
+            srv_id += 1
+    return serverlist
+
+# Generates a list of servers, which should be the same everywhere. Returns as list
+def gen_serverlist(config):
+    # End goal:
+    # server.0=<ip1>:2182:2183 #share node1 cport=2181
+    # server.1=<ip1>:2185:2186 #share node1 cport=2184
+    # server.2=<ip2>:2182:2183 #share node2 cport=2181
+    # server.3=<ip2>:2185:2186 #share node2 cport=2184
+    # If we are server 1, then server.0 should have 'localhost' instead of <ip1>
+    port_to_leader = 2182
+    port_to_elect  = 2183
+
+    serverlist = []
+    srv_id = 0
+    for x in range(len(config.nodes) // idr.num_procs_per_node()):
+        addr = nodenr_to_infiniband(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
+        for y in range(idr.num_procs_per_node()):
+            ptl = port_to_leader + (idr.num_procs_per_node()+1)*y
+            pte = port_to_elect + (idr.num_procs_per_node()+1)*y
+            serverlist.append('server.{0}={1}:{2}:{3}'.format(srv_id, addr, ptl, pte))
+            srv_id += 1
+    return serverlist
 
 
 # Generates the Zookeeper config file for this server instance.
 # Config is written to zookeeper-release-3.3.0/conf/<serverid>.cfg
 def gen_zookeeper_config(config):
-    port_to_leader = 2182
-    port_to_elect  = 2183
-    
-    # This list should be the same everywhere
-    serverlist = []
-    for idx, nodenumber in enumerate(config.cnf.servers):
-        node = nodenr_to_infiniband(nodenumber) if config.cnf.server_infiniband else 'node'+nodenumber
-        serverlist.append('server.{0}={1}:{2}:{3}'.format(idx+1, node, port_to_leader, port_to_elect))
-
     ticktime         = 2000
     initlimit        = 10
     synclimit        = 5
-    clientport       = 2181
+    clientport       = 2181 + (idr.num_procs_per_node()+1)*idr.identifier_local()
 
     config_string = '''
 tickTime={0}
@@ -51,34 +81,37 @@ clientPort={4}
     synclimit,
     config.datadir,
     clientport,
-    '\n'.join(serverlist))
+    '\n'.join(gen_serverlist(config)))
 
-    with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.server_id)), 'w') as file:
+    with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.gid)), 'w') as file:
         file.write(config_string)
 
 
-# Starts Zookeeper, returns immediately after starting a thread containing our process
-def boot(config, debug_mode=False):
-    # return os.system('bash {0} start &'.format(fs.join(get_remote_bin_dir(), 'zkServer.sh'))) == 0
-
+def boot(config, debug_mode):
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
     prefix = ':'.join([
         loc.get_cfg_dir(),
+        config.log4j_dir,
         ':'.join([file for file in fs.ls(loc.get_lib_dir(), only_files=True, full_paths=True) if file.endswith('.jar')]),
         ':'.join([file for file in fs.ls(loc.get_build_lib_dir(), only_files=True, full_paths=True) if file.endswith('.jar')]),
         fs.join(loc.get_build_dir(), 'classes')])
 
     classpath = '{}:{}'.format(prefix, classpath)
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
-    conf_location = fs.join(loc.get_cfg_dir(), str(config.server_id)+'.cfg')
+    conf_location = fs.join(loc.get_cfg_dir(), str(config.gid)+'.cfg')
 
-    command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}" {}'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location, '> /dev/null 2>&1' if not debug_mode else '')
+    command = 'java "-Dzookeeper.log.dir={}" -cp "{}" {} "{}" {}'.format(
+        config.log4j_dir,
+        classpath, 
+        zoo_main, 
+        conf_location, 
+        '> /dev/null 2>&1' if not debug_mode else '')
     executor = Executor(command)
     executor.run(shell=True)
 
     fs.mkdir(config.datadir, exist_ok=True)
     with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
-        file.write(str(config.server_id))
+        file.write(str(config.gid))
     return executor
 
 

@@ -17,28 +17,45 @@ class ExampleExperiment(ExperimentInterface):
         '''get amount of client nodes to allocate'''
         return 2
 
+    def servers_use_infiniband(self):
+        '''True if servers must communicate with eachother over infiniband, False otherwise'''
+        return False
+
+    def clients_use_infiniband(self):
+        '''True if clients must communicate with servers over infinband, False otherwise'''
+        return False
+
+    def servers_core_affinity(self):
+        '''Amount of server processes which may be mapped on the same physical node'''
+        return 1
+
+    def clients_core_affinity(self):
+        '''Amount of client processes which may be mapped on the same physical node'''
+        return 1
+
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
         print('Hi there! I am executed before the experiment starts!')
         metazoo.register['a_key'] = 'Hello World'
         metazoo.register['secret'] = 42
-        if metazoo.id == None:
-            print('I cannot use id here yet!')
+        if metazoo.gid == None and metazoo.lid == None:
+            print('I cannot use gid and lid here yet!')
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
-        print('Hello from client with id={}.'.format(metazoo.id))
+        print('Hello from client with gid={}.'.format(metazoo.gid))
         time.sleep(5)
-        print('I (client {}) slept well. Pre-experiment says "{}" with secret code {}. Goodbye!'.format(
-            metazoo.id,
+        print('I (client {}:{})) slept well. Pre-experiment says "{}" with secret code {}. Goodbye!'.format(
+            metazoo.gid,
+            metazoo.lid,
             metazoo.register['a_key'],
             metazoo.register['secret']))
 
 
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
-        print('I am server {}, and I will try to modify the register now'.format(metazoo.id))
+        print('I am server {}:{}, and I will try to modify the register now'.format(metazoo.gid, metazoo.lid))
         try:
             metazoo.register['secret'] = -1
         except Exception as e:

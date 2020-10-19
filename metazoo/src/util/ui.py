@@ -26,6 +26,14 @@ def ask_bool(question):
         else:
             print('Input "{0}" could not be interpreted as a boolean. Try again'.format(val))
 
+# Ask user for a string, possibly with confirmation
+def ask_string(question, confirm=False, empty_ok=False):
+    while True:
+        val = input(str(question)+' ').strip()
+        if not empty_ok and len(val)==0:
+            print('You should provide an empty string!')
+        elif (confirm and ask_bool('Your choice: "{}". Are you absolutely sure this is correct?'.format(val))) or not confirm:
+            return val
 
 # Ask user to pick one of the displayed options.
 # Returns integer index of picked item

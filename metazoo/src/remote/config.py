@@ -1,35 +1,141 @@
-from parse.parser import Parser
+import abc
+import os
+import socket
 
-class Config(object):
-    def __init__(self):
-        parser = Parser() 
-        # List of server node numbers
+import remote.identifier as idr
+
+
+# Constructs a client config, populates it, and returns it
+def config_construct_client(experiment, hosts):
+    nodenumbers = [int(nodename[4:]) for nodename in os.environ['HOSTS'].split()]
+    nodenumbers.sort()
+    if not len(nodenumbers) == experiment.num_clients:
+        raise RuntimeError('Allocated incorrect number of nodes ({}) for {} clients'.format(len(nodenumbers), experiment.num_clients))
+    return ClientConfig(experiment, nodenumbers, hosts)
+
+# Constructs a server config, populates it, and returns it
+def config_construct_server(experiment):
+    nodenumbers = [int(nodename[4:]) for nodename in os.environ['HOSTS'].split()]
+    nodenumbers.sort()
+    if not len(nodenumbers) == experiment.num_servers:
+        raise RuntimeError('Allocated incorrect number of nodes ({}) for {} servers'.format(len(nodenumbers), experiment.num_servers))
+    return ServerConfig(experiment, nodenumbers)
+
+
+class Config(metaclass=abc.ABCMeta):
+    def __init__(self, experiment, nodes):
+        # List of server node numbers and client node numbers
         # (e.g. [114, 116,...],corresponding to 'node114' and 'node116' hosts)
-        self.servers = None
-        # List of client node numbers
-        self.clients = None
+        self._nodes = nodes
 
-        self.server_infiniband = parser.servers_use_infiniband
-        self.client_infiniband = parser.clients_use_infiniband
+        self._server_infiniband = experiment.servers_use_infiniband
+        self._client_infiniband = experiment.clients_use_infiniband
+
+        self._gid = idr.identifier_global()
+        self._lid = idr.identifier_local()
+
+    @property
+    def server_infiniband(self):
+        return self._server_infiniband
+    
+    @property
+    def client_infiniband(self):
+        return self._client_infiniband
+
+    @property
+    def lid(self):
+        return self._lid
+
+    @property
+    def gid(self):
+        return self._gid
+
+    @property
+    def nodes(self):
+        return self._nodes
+    
 
 
-class ServerConfig(object):
-    def __init__(self, config, server_id):
-        super(ServerConfig, self).__init__()
-        self.cnf = config
-        # Server id, used to globally identify this server. Must be equivalent everywhere
-        self.server_id = server_id
+class ServerConfig(Config):
+    def __init__(self, experiment, nodes):
+        super(ServerConfig, self).__init__(experiment, nodes)
         # Directory containing data for this server
-        self.datadir = None
+        self._datadir = None
         # Directory where log4j writes its logs, if we specify that log4j should write to file
-        self.log4j_dir = None
-        # Properties to hand to log4j
-        self.log4j_properties = None
+        self._log4j_dir = None
+
+    @property
+    def server_infiniband(self):
+        return super().server_infiniband
+    
+    @property
+    def client_infiniband(self):
+        return super().client_infiniband
+
+    @property
+    def lid(self):
+        return super().lid
+
+    @property
+    def gid(self):
+        return super().gid
+
+    @property
+    def nodes(self):
+        return super().nodes
+
+    @property
+    def datadir(self):
+        return self._datadir
+    
+    @datadir.setter
+    def datadir(self, value):
+        self._datadir = value
+
+    @property
+    def log4j_dir(self):
+        return self._log4j_dir
+    
+    @log4j_dir.setter
+    def log4j_dir(self, value):
+        self._log4j_dir = value
 
 
-class ClientConfig(object):
-    def __init__(self, config):
-        super(ClientConfig, self).__init__()
-        self.cnf = config
-        self.host = 'node' + str(config.servers[0]) + ':2181'
-        self.log4j_dir = None
+class ClientConfig(Config):
+    def __init__(self, experiment, nodes, hosts):
+        super(ClientConfig, self).__init__(experiment, nodes)
+        self._hosts = hosts
+        self._log4j_dir = None #TODO: Used?
+
+    @property
+    def server_infiniband(self):
+        return super().server_infiniband
+    
+    @property
+    def client_infiniband(self):
+        return super().client_infiniband
+
+    @property
+    def lid(self):
+        return super().lid
+
+    @property
+    def gid(self):
+        return super().gid
+
+    @property
+    def nodes(self):
+        return super().nodes
+
+    @property
+    def hosts(self):
+        return self._hosts
+
+    @property
+    def log4j_dir(self):
+        return self._log4j_dir
+
+    @log4j_dir.setter
+    def log4j_dir(self, value):
+        self._log4j_dir = value
+    

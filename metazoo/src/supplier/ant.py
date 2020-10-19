@@ -31,6 +31,7 @@ def install():
         try:
             with zipfile.ZipFile(ziploc, 'r') as zip_ref:
                 zip_ref.extractall(depsloc)
+            break
         except zipfile.BadZipFile as e:
             print('Bad zipfile detected. Retrying...')
 

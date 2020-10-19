@@ -16,6 +16,10 @@ class ExperimentInterface(metaclass=abc.ABCMeta):
     def __subclasshook__(cls, subclass):
         return (hasattr(subclass, 'num_servers') and callable(subclass.num_servers) and 
                 hasattr(subclass, 'num_clients') and callable(subclass.num_clients) and 
+                hasattr(subclass, 'servers_use_infiniband') and callable(subclass.servers_use_infiniband) and 
+                hasattr(subclass, 'clients_use_infiniband') and callable(subclass.clients_use_infiniband) and 
+                hasattr(subclass, 'servers_core_affinity') and callable(subclass.servers_core_affinity) and 
+                hasattr(subclass, 'clients_core_affinity') and callable(subclass.clients_core_affinity) and 
                 hasattr(subclass, 'pre_experiment') and callable(subclass.pre_experiment) and 
                 hasattr(subclass, 'experiment_client') and callable(subclass.experiment_client) and 
                 hasattr(subclass, 'experiment_server') and callable(subclass.experiment_server) and 
@@ -30,6 +34,27 @@ class ExperimentInterface(metaclass=abc.ABCMeta):
     def num_clients(self):
         '''get amount of client nodes to allocate'''
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def servers_use_infiniband(self):
+        '''True if servers must communicate with eachother over infiniband, False otherwise'''
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def clients_use_infiniband(self):
+        '''True if clients must communicate with servers over infinband, False otherwise'''
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def servers_core_affinity(self):
+        '''Amount of server processes which may be mapped on the same physical node'''
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def clients_core_affinity(self):
+        '''Amount of client processes which may be mapped on the same physical node'''
+        raise NotImplementedError
+
 
     @abc.abstractmethod
     def pre_experiment(self, metazoo):

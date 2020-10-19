@@ -1,13 +1,14 @@
 #!/usr/bin/python
-import sys
-import os
-import subprocess
 import argparse
+import os
+import sys
+import subprocess
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
 import dynamic.experiment as exp
-import parse.parser as psr
+from remote.executor import Executor
 import remote.remote as rmt
+from settings.settings import settings_instance as st
 import supplier.ant as ant
 import supplier.java as jv
 import util.location as loc
@@ -67,12 +68,18 @@ def compile():
     return statuscode == 0
 
 
-def _exec_internal(debug_mode=False):
-    return rmt.run(debug_mode=debug_mode)
+def _exec_internal_client(debug_mode=False):
+    return rmt.run_client(debug_mode)
+
+def _exec_internal_server(debug_mode=False):
+    return rmt.run_server(debug_mode)
 
 
-def exec(force_comp=False, override_conf=False, debug_mode=False):
+def exec(force_comp=False, debug_mode=False):
     print('Connected!', flush=True)
+    if not fs.isdir(loc.get_remote_metazoo_dir()):
+        print('[FAILURE] Missing project on remote. Did you run "{} --init"?'.format(sys.argv[0]))
+        return False
     if (force_comp or not is_compiled()):
         if not compile():
             print('[FAILURE] Could not compile!')
@@ -80,33 +87,48 @@ def exec(force_comp=False, override_conf=False, debug_mode=False):
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
 
-    if override_conf:
-        psr.gen_config()
-    else:
-        psr.check_config() # Check configuration file and ask questions is necessary
     print('Loading experiment...', flush=True)
     experiment = exp.get_experiment()
     num_nodes_total = experiment.num_servers + experiment.num_clients
 
-    command = 'prun -np {} -1 python3 {} --exec_internal {}'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
-    print('Booting network...', flush=True)
+
+    aff_server = experiment.servers_core_affinity
+    nodes_server = experiment.num_servers // aff_server
+    command_server = 'prun -np {} -{} python3 {} --exec_internal_server {}'.format(nodes_server, aff_server, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
+    aff_client = experiment.clients_core_affinity
+    nodes_client = experiment.num_clients // aff_client
+    command_client = 'prun -np {} -{} python3 {} --exec_internal_client {}'.format(nodes_client, aff_client, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
+    
+    fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
+    fs.mkdir(loc.get_remote_crawlspace_dir())
 
     experiment.pre_experiment()
-    success = os.system(command) == 0
+    print('Booting server network...', flush=True)
+    
+    print('Booting client network...', flush=True)
+    
+    server_exec = Executor(command_server)
+    client_exec = Executor(command_client)
+
+    Executor.run_all(server_exec, client_exec, shell=True)
+    status = Executor.wait_all(server_exec, client_exec)
+
     experiment.post_experiment()
     experiment.clean()
-    print('[SUCCESS] Experiment complete!')
-    return success
-
+    if status:
+        print('[SUCCESS] Experiment complete!')
+    else:
+        print('[FAILURE] Experiment had errors!')
+    return status
 
 
 def export(full_exp=False):
-    print('Copying files using "{}" strategy...'.format('full' if full_exp else 'fast'))
+    print('Copying files using "{}" strategy, using key "{}"...'.format('full' if full_exp else 'fast', st.ssh_key_name))
     if full_exp:
         command = 'rsync -az {} {}:{} {} {} {}'.format(
             fs.dirname(fs.abspath()),
-            rmt.get_remote(),
-            loc.get_remote_dir(),
+            st.ssh_key_name,
+            loc.get_remote_metazoo_parent_dir(),
             '--exclude .git',
             '--exclude __pycache__',
             '--exclude zookeeper-client')
@@ -117,14 +139,13 @@ def export(full_exp=False):
         print('[Note] This means we skip zookeeper-release-3.3.0 files.')
         command = 'rsync -az {} {}:{} {} {} {} {} {}'.format(
             fs.dirname(fs.abspath()),
-            rmt.get_remote(),
-            loc.get_remote_dir(),
+            st.ssh_key_name,
+            loc.get_remote_parent_dir(),
             '--exclude zookeeper-release-3.3.0',
             '--exclude zookeeper-client',
             '--exclude deps',
             '--exclude .git',
             '--exclude __pycache__')
-
     if os.system(command) == 0:
         print('Export success!')
         return True
@@ -137,8 +158,8 @@ def _init_internal():
     print('Connected!', flush=True)
     if not compile():
         print('[FAILURE] Could not compile code on DAS5!')
-        return False
-    return True
+        exit(1)
+    exit(0)
 
 
 def init():
@@ -150,28 +171,33 @@ This way, you will not be asked for your password at every command.
 ''')
     print('Initializing MetaZoo...')
     if not export(full_exp=True):
-        print('[FAILURE] Unable to export to DAS5 remote using user/ssh-key "{}"'.format(rmt.get_remote()))
+        print('[FAILURE] Unable to export to DAS5 remote using user/ssh-key "{}"'.format(st.ssh_key_name))
         return False
-    print('Connecting to {0}...'.format(rmt.get_remote()))
+    print('Connecting using key "{0}"...'.format(st.ssh_key_name))
 
-    tmp = os.system('ssh {0} "python3 {1}/zookeeper/metazoo/main.py --init_internal"'.format(rmt.get_remote(), loc.get_remote_dir())) == 0
+    tmp = os.system('ssh {0} "python3 {1}/metazoo/main.py --init_internal"'.format(st.ssh_key_name, loc.get_remote_metazoo_dir())) == 0
     if tmp:
         print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
 
-def remote(force_exp=False, force_comp=False, override_conf=False, debug_mode=False):
+def remote(force_exp=False, force_comp=False, debug_mode=False):
     if force_exp and not export(full_exp=True):
         print('[FAILURE] Could not export data')
         return False
 
-    program = '--exec'+(' -c' if force_comp else '')+(' -o' if override_conf else '')+('-d' if debug_mode else '')
+    program = '--exec'+(' -c' if force_comp else '')+(' -d' if debug_mode else '')
 
-    command = 'ssh {0} "python3 {1}/zookeeper/metazoo/main.py {2}"'.format(
-        rmt.get_remote(),
-        loc.get_remote_dir(),
+
+    command = 'ssh {0} "python3 {1}/metazoo/main.py {2}"'.format(
+        st.ssh_key_name,
+        loc.get_remote_metazoo_dir(),
         program)
-    print('Connecting to {0}...'.format(rmt.get_remote()))
+    print('Connecting using key "{0}"...'.format(st.ssh_key_name))
     return os.system(command) == 0
+
+
+def settings():
+    st.change_settings()
 
 
 def main():
@@ -180,16 +206,17 @@ def main():
     group.add_argument('--clean', help='clean build directory', action='store_true')
     group.add_argument('--check', help='check whether environment has correct tools', action='store_true')
     group.add_argument('--compile', help='compile ancient', action='store_true')
-    group.add_argument('--exec_internal', help=argparse.SUPPRESS, action='store_true')
+    group.add_argument('--exec_internal_client', help=argparse.SUPPRESS, action='store_true')
+    group.add_argument('--exec_internal_server', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--exec', help='call this on the DAS5 to handle server orchestration', action='store_true')
     group.add_argument('--export', help='export only metazoo and script code to the DAS5', action='store_true')
     group.add_argument('--init_internal', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--init', help='Initialize MetaZoo to run code on the DAS5', action='store_true')
     group.add_argument('--remote', help='execute code on the DAS5 from your local machine', action='store_true')
+    group.add_argument('--settings', help='Change settings', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
-    parser.add_argument('-e', '--force-export', dest='force_exp', help='Forces to re-do the export phase', action='store_true')
-    parser.add_argument('-o', '--override-conf', dest='override_conf', help='Forces MetaZoo to ignore existing configs', action='store_true')
     parser.add_argument('-d', '--debug-mode', dest='debug_mode', help='Run remote in debug mode', action='store_true')
+    parser.add_argument('-e', '--force-export', dest='force_exp', help='Forces to re-do the export phase', action='store_true')
     args = parser.parse_args()
 
 
@@ -199,10 +226,12 @@ def main():
         check()
     elif args.clean:
         clean()
-    elif args.exec_internal:
-        _exec_internal(debug_mode=args.debug_mode)
+    elif args.exec_internal_client:
+        _exec_internal_client(args.debug_mode)
+    elif args.exec_internal_server:
+        _exec_internal_server(args.debug_mode)
     elif args.exec:
-        exec(force_comp=args.force_comp, override_conf=args.override_conf, debug_mode=args.debug_mode)
+        exec(force_comp=args.force_comp, debug_mode=args.debug_mode)
     elif args.export:
         export(full_exp=True)
     elif args.init_internal:
@@ -210,8 +239,9 @@ def main():
     elif args.init:
         init()
     elif args.remote:
-        remote(force_exp=args.force_exp, force_comp=args.force_comp, override_conf=args.override_conf, debug_mode=args.debug_mode)
-    
+        remote(force_exp=args.force_exp, force_comp=args.force_comp, debug_mode=args.debug_mode)
+    elif args.settings:
+        settings()
 
     if len(sys.argv) == 1:
         parser.print_help()

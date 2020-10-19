@@ -1,80 +1,55 @@
-import socket
-import os
-
 from dynamic.experiment import Experiment
-from remote.config import Config, ServerConfig, ClientConfig
+from remote.config import config_construct_server, config_construct_client, ServerConfig, ClientConfig
 import remote.server as srv
 import remote.client as cli
 import util.fs as fs
 import util.location as loc
 import time
 
-def get_remote():
-    return 'dpsdas5LU'
 
-
-# Assigns nodes in specific server and client lists in the config
-def get_node_assignment(config, experiment):
-    nodenumbers = [int(nodename[4:]) for nodename in os.environ['HOSTS'].split()]
-    nodenumbers.sort()
-    if not len(nodenumbers) == experiment.num_servers + experiment.num_clients:
-        raise RuntimeError('Only {} nodes allocated for {} servers and {} clients'.format(len(nodenumbers), config.num_servers, config.num_clients))
-    config.servers = nodenumbers[:experiment.num_servers] # The (alphabetically sorted) first X nodes will be the servers
-    config.clients = nodenumbers[experiment.num_servers:] # The rest of the nodes will be the clients
- 
-
-
-# determine server id from the config
-def get_server_id(config):
-    try:
-        return config.servers.index(int(socket.gethostname()[4:]))+1
-    except ValueError as e:
-        raise RuntimeError('Cannot fetch server id for this node, because this is a client')
-
-
-# Constructs either a (server/client) config, populates it, and returns it
-def construct_config(experiment):
-    config = Config()
-    get_node_assignment(config, experiment)
-    if int(socket.gethostname()[4:]) in config.servers: # if hostname is in server list
-        return ServerConfig(config, get_server_id(config)) # we have a server
-    return ClientConfig(config) #otherwise, we have a client
-
-
-def run(debug_mode=False):
+def run_server(debug_mode):
     experiment = Experiment.load()
-    config = construct_config(experiment)
+    config = config_construct_server(experiment)
 
-    if isinstance(config, ServerConfig):
-        if config.server_id == None:
-            raise RuntimeError('Oh oh, should not happen')
-        
-        srv.populate_config(config)
-        srv.gen_zookeeper_config(config)
+    # Write communication file for clients to read
+    if config.gid == 0:
+        with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'w') as file:
+            file.write('\n'.join(srv.gen_connectionlist(config)))
 
-        print('Server with id {} generated {}.cfg'.format(config.server_id, config.server_id), flush=True)
-        executor = srv.boot(config, debug_mode)
+    srv.populate_config(config)
+    srv.gen_zookeeper_config(config)
 
-        experiment.experiment_server(config.server_id, executor)
-        
-        srv.stop(executor)
-        #TODO: fix
-        return True
-        # return srv.run(config)
-    else:
-        time.sleep(4)
-        cli.populate_config(config)
-        executor = cli.boot(config)
+    executor = srv.boot(config, debug_mode)
 
-        if config.host == None:
-            raise RuntimeError('Oh oh , should not happen')
+    experiment.experiment_server(config, executor)
+    
+    status = srv.stop(executor)
 
-        experiment.experiment_client(config.host, executor)
-        cli.stop(executor)
+    # Delete communication file
+    if config.gid == 0:
+        fs.rm(loc.get_cfg_dir(), '.metazoo.cfg')
+    return status
+    
+def run_client(debug_mode):
+    experiment = Experiment.load()
 
-        local_log = '.metazoo-log'
-        if not fs.exists(loc.get_metazoo_log_dir()):
-            fs.mkdir(loc.get_metazoo_log_dir())
-            #TODO: client id?
-        fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log + '0'))
-        return True
+    while not fs.isfile(loc.get_cfg_dir(), '.metazoo.cfg'):
+        time.sleep(1) # We must wait until the servers make themselves known
+
+    with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'r') as file:
+        # server.0=<ip1>:<clientport> --> <ip1>:<clientport>
+        hosts = [line.split('=')[1] for line in file.readlines()]
+
+    config = config_construct_client(experiment, hosts)
+    cli.populate_config(config)
+    time.sleep(4)
+
+    executor = cli.boot(config, debug_mode)
+    experiment.experiment_client(config, executor)
+    status = cli.stop(executor)
+
+    local_log = '.metazoo-log'
+    if fs.isfile(loc.get_node_log_dir(), local_log):
+        fs.mkdir(loc.get_metazoo_log_dir(), exist_ok=True)
+        fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log+str(config.gid)))
+    return status

@@ -11,17 +11,20 @@ def printenvs(keys):
             print('{0:12}  {1}'.format(key.lower(), os.environ[key]))
         except KeyError as e:
             print('{0:12}  UNAVAILABLE KEY'.format(key.lower()))
+
 fellow_nodes = os.environ['HOSTS'].split()
 fellow_nodes.remove(socket.gethostname())
 print('My fellow nodes are: ', end='')
 print(*fellow_nodes)
 print('Their IPs are: ', end='')
 for x in fellow_nodes:
-	print(socket.gethostbyname(x), end=' ')
+    print('{} (host: {})'.format(socket.gethostbyname(x), x), end=' ')
 
+print('')
 #useful_envvars = ['SSH_CLIENT', 'SLURM_NTASKS', 'SLURM_NNODES', 'HOSTS', 'SLURM_JOB_NODELIST', 'SSH_CONNECTION', 'SLURMD_NODENAME', 'PANDA_HOST_PORT_KEY']
-#printenvs(os.environ)
-#printenvs(useful_envvars)
+useful_envvars = ['SLURM_JOB_NODELIST', 'SLURMD_NODENAME', 'SLURM_NODEID', 'SLURM_PROCID', 'SLURM_LOCALID', 'SLURM_NPROCS', 'SLURM_NTASKS', 'SLURM_NNODES', 'SLURM_TASKS_PER_NODE', 'PRUN_CPU_RANK', 'SLURM_GTIDS', 'HOSTS', 'PRUN_HOSTNAMES']
+# printenvs(os.environ)
+printenvs(useful_envvars)
 
 print('\n\n')
 # SLURM_NTASKS

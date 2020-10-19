@@ -1,0 +1,119 @@
+import configparser
+
+import util.ui as ui
+import util.fs as fs
+
+
+def get_metazoo_settings_file():
+    return fs.join(fs.abspath(), 'metazoo.cfg')
+
+def ask_ssh_key_name():
+    return ui.ask_string('Please type the name of your SSH entry (e.g. "dpsDAS5LU")', confirm=True)
+
+def ask_ssh_user_name():
+    return ui.ask_string('What is your username on the remote machine (e.g. "dpsDAS5LU")?')
+
+def ask_remote_metazoo_dir():
+    return ui.ask_string('''
+In which directory to install metazoo on the remote machine (e.g. /some/path)?
+Note: MetaZoo is installed in that path. So in our example, remote would get /some/path/zookeeper/
+Note: This directory you choose MUST be accessible by all nodes we might spawn on the remote. Recommendation: /var/scratch/<some_dir>
+''')
+
+def ask_remote_crawlspace_dir():
+    return ui.ask_string('''
+In which directory to let Zookeeper crawl around? (e.g. /some/path)?
+Note: This directory you choose MUST be accessible by all nodes we might spawn on the remote. Recommendation: /var/scratch/<some_dir>
+''')
+
+# Ask user questions to generate a config
+def gen_config(config_loc):
+    write_config(config_loc, ask_ssh_key_name(), ask_ssh_user_name(), ask_remote_metazoo_dir(), ask_remote_crawlspace_dir())
+
+# Persist a configuration file
+def write_config(config_loc, key_name, user, metazoo_dir, crawlspace_dir):
+    parser = configparser.ConfigParser()
+    parser['SSH'] = {
+        'key_name': key_name,
+        'user': user,
+        'metazoo_dir': metazoo_dir,
+        'crawlspace_dir': crawlspace_dir
+    }
+    with open(config_loc, 'w') as file:
+        parser.write(file)
+
+
+def change_settings():
+    if not fs.exists(get_metazoo_settings_file()):
+        gen_config(get_metazoo_settings_file())
+        return
+    l = ['key_name', 'user', 'metazoo_dir', 'crawlspace_dir']
+    while True:
+        idx = ui.ask_pick('Which setting to change?', l)
+        cur = [s.ssh_key_name, s.ssh_user_name, s.remote_metazoo_dir, s.remote_crawlspace_dir]
+        print('\nCurrent value: "{}"'.format(cur[idx]))
+        if idx == 0:
+            s.ssh_key_name = ask_ssh_key_name
+        elif idx == 1:
+            s.ssh_user_name = ask_ssh_user_name()
+        elif idx == 2:
+            s.ask_remote_metazoo_dir = ask_remote_metazoo_dir()
+        elif idx == 3:
+            s.ask_remote_crawlspace_dir = ask_remote_crawlspace_dir()
+        s.persist()
+        if ui.ask_bool('Done?'):
+            return
+
+def validate_settings(config_loc):
+    d = dict()
+    d['SSH'] = {'key_name', 'user', 'metazoo_dir', 'crawlspace_dir'}
+    
+    parser = configparser.ConfigParser()
+    parser.read(config_loc)
+    for key in d:
+        if not key in parser:
+            raise RuntimeError('Missing section "{}"'.format(key))
+        else:
+            for subkey in d[key]:
+                if not subkey in parser[key]:
+                    raise RuntimeError('Missing key "{}" in section "{}"'.format(subkey, key))
+
+
+class SettingsConfig(object):    
+    def __init__(self):
+        loc = get_metazoo_settings_file()
+        if not fs.exists(loc):
+            gen_config(loc)
+        else:
+            validate_settings(loc)
+        self.parser = configparser.ConfigParser()
+        self.parser.read(loc)
+
+
+    # SSH key to use when communicating with remote
+    @property
+    def ssh_key_name(self):
+        return self.parser['SSH']['key_name']
+
+    # Username on remote
+    @property
+    def ssh_user_name(self):
+        return self.parser['SSH']['user']
+
+    # Path to the desired location to store metazoo on the remote
+    @property
+    def remote_metazoo_dir(self):
+        return self.parser['SSH']['metazoo_dir']
+
+    # Path to the crawlspace for zookeeper
+    @property
+    def remote_crawlspace_dir(self):
+        return self.parser['SSH']['crawlspace_dir']
+
+    def persist():
+        with open(config_loc, 'w') as file:
+            parser.write(file)
+
+
+# Import settings_instance if you wish to read settings
+settings_instance = SettingsConfig()
