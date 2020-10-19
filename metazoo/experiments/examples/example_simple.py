@@ -39,22 +39,23 @@ class ExampleExperiment(ExperimentInterface):
         print('Hi there! I am executed before the experiment starts!')
         metazoo.register['a_key'] = 'Hello World'
         metazoo.register['secret'] = 42
-        if metazoo.id == None:
-            print('I cannot use id here yet!')
+        if metazoo.gid == None and metazoo.lid == None:
+            print('I cannot use gid and lid here yet!')
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
-        print('Hello from client with id={}.'.format(metazoo.id))
+        print('Hello from client with gid={}.'.format(metazoo.gid))
         time.sleep(5)
-        print('I (client {}) slept well. Pre-experiment says "{}" with secret code {}. Goodbye!'.format(
-            metazoo.id,
+        print('I (client {}:{})) slept well. Pre-experiment says "{}" with secret code {}. Goodbye!'.format(
+            metazoo.gid,
+            metazoo.lid,
             metazoo.register['a_key'],
             metazoo.register['secret']))
 
 
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
-        print('I am server {}, and I will try to modify the register now'.format(metazoo.id))
+        print('I am server {}:{}, and I will try to modify the register now'.format(metazoo.gid, metazoo.lid))
         try:
             metazoo.register['secret'] = -1
         except Exception as e:
