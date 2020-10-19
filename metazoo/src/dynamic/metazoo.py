@@ -8,6 +8,7 @@ class MetaZoo(object):
     def __init__(self):
         self.register = dict()
         self.log = None
+        self.host = None
         self._id = None
 
 

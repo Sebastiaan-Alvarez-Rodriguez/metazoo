@@ -25,6 +25,12 @@ def get_build_dir():
 def get_cfg_dir():
     return fs.join(get_zookeeper_dir(), 'conf')
 
+def get_server_cfg_dir():
+    return fs.join(get_cfg_dir(), 'server')
+
+def get_client_cfg_dir():
+    return fs.join(get_cfg_dir(), 'client')
+
 def get_bin_dir():
     return fs.join(get_zookeeper_dir(), 'bin')
 
@@ -52,4 +58,4 @@ def get_remote_prj_dir():
 
 #################### Node directories ####################
 def get_node_log_dir():
-    return os.environ['HOME']
+    return '/local/ddps2009/'

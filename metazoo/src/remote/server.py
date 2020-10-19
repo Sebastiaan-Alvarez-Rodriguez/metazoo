@@ -18,8 +18,8 @@ def nodenr_to_infiniband(nodenr):
 # Populates uninitialized config members
 def populate_config(config):
     config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_dir(), config.server_id)
-    config.log4j_loc = loc.get_cfg_dir()
-    config.log4j_properties = 'ERROR,CONSOLE' # Log INFO-level information, send to console
+    config.log4j_loc = loc.get_server_cfg_dir()
+    config.log4j_properties = 'INFO,CONSOLE' # Log INFO-level information, send to console
 
 
 # Generates the Zookeeper config file for this server instance.
@@ -58,7 +58,7 @@ clientPort={4}
 
 
 # Starts Zookeeper, returns immediately after starting a thread containing our process
-def boot_server(config):
+def boot(config):
     # return os.system('bash {0} start &'.format(fs.join(get_remote_bin_dir(), 'zkServer.sh'))) == 0
 
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
@@ -83,9 +83,5 @@ def boot_server(config):
 
 
 # Stops Zookeeper instance
-def stop_server(executor):
+def stop(executor):
     return executor.stop()
-
-
-def run(config):
-    return True

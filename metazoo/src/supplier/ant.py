@@ -20,7 +20,8 @@ def install():
     print('Installing ant in {0}'.format(depsloc))
 
     ziploc = fs.join(depsloc, 'ant.zip')
-    
+    Path(ziploc).touch()
+
     for x in range(5):
         fs.rm(ziploc)
         url = 'https://downloads.apache.org//ant/binaries/apache-ant-1.10.9-bin.zip'

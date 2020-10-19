@@ -21,8 +21,8 @@ class Experiment(object):
     def num_servers(self):
         if self._num_servers == None:
             self._num_servers = self.instance.num_servers()
-            if self._num_servers < 0:
-                raise RuntimeError('Experiment must specify num_servers > 0 (currently got {})'.format(self._num_servers))
+            if self._num_servers < 2:
+                raise RuntimeError('Experiment must specify num_servers >=2 (currently got {})'.format(self._num_servers))
         return self._num_servers
 
 
@@ -30,8 +30,8 @@ class Experiment(object):
     def num_clients(self):
         if self._num_clients == None:
             self._num_clients = self.instance.num_clients()
-            if self._num_clients < 0:
-                raise RuntimeError('Experiment must specify num_clients > 0 (currently got {})'.format(self._num_clients))
+            if self._num_clients < 1:
+                raise RuntimeError('Experiment must specify num_clients >=1 (currently got {})'.format(self._num_clients))
         return self._num_clients
     
     @property
@@ -46,15 +46,15 @@ class Experiment(object):
         return val
 
 
-    def experiment_client(self, client_or_server_id):
+    def experiment_client(self, host):
         self._metazoo = MetaZoo.load() # Inside client node, must load persisted state
-        self._metazoo.id = client_or_server_id
+        self._metazoo.host = host
         return self.instance.experiment_client(self._metazoo)
 
     
-    def experiment_server(self, client_or_server_id):
+    def experiment_server(self, server_id):
         self._metazoo = MetaZoo.load() # Inside server node, must load persisted state
-        self._metazoo._id = client_or_server_id
+        self._metazoo._id = server_id
         return self.instance.experiment_server(self._metazoo)
 
 

@@ -1,4 +1,5 @@
 import os
+import util.fs as fs
 import subprocess
 
 def check_can_call(arglist):
@@ -13,7 +14,10 @@ def check_version(minVersion=8, maxVersion=8):
     if not 'JAVA_HOME' in os.environ:
         print('JAVA_HOME is not set. Please set this environment variable to point to your Java installation directory.')
         returncode = False
-
+    elif not fs.isfile(os.environ['JAVA_HOME'], 'bin', 'java'):
+        print('Incorrect JAVA_HOME set: Cannot reach JAVA_HOME/bin/java ({0}/bin/java'.format(os.environ['JAVA_HOME']))
+        print('Note: Java is commonly installed in /usr/lib/jvm/...')
+        returncode = False
     returncode &= check_can_call(['java', '-version'])
     returncode &= check_can_call(['javac', '-version'])
 
