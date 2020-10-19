@@ -20,7 +20,7 @@ class ExampleExperiment(ExperimentInterface):
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
-        return 1
+        return 2
 
     def servers_use_infiniband(self):
         '''True if servers must communicate with eachother over infiniband, False otherwise'''
@@ -42,15 +42,15 @@ class ExampleExperiment(ExperimentInterface):
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
         print('Hi there! I am executed before the experiment starts!')
-        metazoo.register['time'] = 30
-        nr_kills = 7
+        metazoo.register['time'] = 50
+        nr_kills = 3
         metazoo.register['nr_kills'] = nr_kills
         metazoo.register['kills'] = [random.randint(0, self.num_servers()-1) for x in range(nr_kills)]
         print('Running for {}s, killing: {}'.format(metazoo.register['time'], metazoo.register['kills']), flush=True)
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
-        print('Hello from client, I will connect to:{}.'.format(metazoo.host), flush=True)
+        print('Hello from client', flush=True)
         sleep_time = metazoo.register['time']
         time.sleep(sleep_time) #Client remains active for a while
         print('Shutting down client', flush=True)
@@ -62,11 +62,12 @@ class ExampleExperiment(ExperimentInterface):
         print('I am server {}, and I am running ZooKeeper now...'.format(metazoo.gid), flush=True) 
         nap_time = metazoo.register['time'] / (metazoo.register['nr_kills']+1)
         kills = metazoo.register['kills']
-        time.sleep(nap_time)
+        time.sleep(20)
         for kill in kills:
             if kill == metazoo.gid:
-                metazoo.executor.reboot()
+               metazoo.executor.reboot()
             time.sleep(nap_time)
+        time.sleep(nap_time)
 
 
     def post_experiment(self, metazoo):

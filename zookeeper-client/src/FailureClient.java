@@ -4,6 +4,8 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -16,6 +18,7 @@ public class FailureClient {
     private static String node_name;
     private static ZooKeeperConnection conn;
     private static Logger LOG;
+    private static String logfile;
 
     private static final int NR_READS = 70;
     private static final int NR_WRITES = 30;
@@ -44,7 +47,7 @@ public class FailureClient {
                        ++operations;
                        nodes.setData_async(node_name, data, this);
                    } catch (Exception e) {
-                       LOG.debug(e.getMessage());
+                       LOG.error(e.getMessage());
                    }
                }
            }
@@ -75,35 +78,42 @@ public class FailureClient {
             nodes.delete(node_name);
             conn.close();
         } catch (Exception e) {
-            LOG.debug(e.getMessage());
+            LOG.error(e.getMessage());
         }
         timer.cancel();
         timer.purge();
-        for(Integer i : ops)
-            LOG.warn("ops: "+i.toString());
+        try {
+            FileWriter writer = new FileWriter(logfile);
+            for(Integer i : ops)
+                writer.write("ops: "+i.toString()+"\n");
+            writer.close();
+        } catch (IOException e) {
+            LOG.error(e.getMessage());
+        }
     }
 
     public static void main(String[] args)  {
-        Runtime.getRuntime().addShutdownHook(new Thread(FailureClient::shutdown));
-
-        if (args.length != 2) {
-            System.out.println("[ERROR] expected two arguments");
+        if (args.length != 3) {
+            System.out.println("[ERROR] expected three arguments");
             System.exit(1);
         }
-        LOG = Logger.getLogger(FailureClient.class);
+
         String host = args[0];
         int id = Integer.parseInt(args[1]);
-        node_name = "/ClientNode" + id;
-        String message = "I am Client"+ id;
-        LOG.warn(message);
+        logfile = args[2];
         operations = 0;
         conn = new ZooKeeperConnection();
         try {
+            LOG = Logger.getLogger(FailureClient.class);
+            node_name = "/ClientNode" + id;
+            String message = "I am Client"+ id;
+            LOG.warn(message);
+            Runtime.getRuntime().addShutdownHook(new Thread(FailureClient::shutdown));
             ZooKeeper zoo = conn.connect(host);
             nodes = new ZnodeManager(zoo);
             run();
         } catch (Exception e) {
-            LOG.debug(e.getMessage());
+            LOG.error(e.getMessage());
         } finally {
             shutdown();
         }
