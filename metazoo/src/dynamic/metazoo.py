@@ -11,6 +11,7 @@ class MetaZoo(object):
         self.host = None
         self._gid = None
         self._lid = None
+        self.clean_func = None
 
     @property
     def gid(self):

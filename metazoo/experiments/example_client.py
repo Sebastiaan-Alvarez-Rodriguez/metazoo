@@ -2,8 +2,10 @@ from experiments.interface import ExperimentInterface
 import remote.server as srv
 import util.fs as fs
 import util.location as loc
-import os
+
+import threading
 import time
+import os
 import random
 
 class ExampleExperiment(ExperimentInterface):
@@ -46,11 +48,22 @@ class ExampleExperiment(ExperimentInterface):
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
-        metazoo.register['time'] = 50
-        nr_kills = 3
+        metazoo.register['time'] = 300
+        nr_kills = 7
         metazoo.register['nr_kills'] = nr_kills
         metazoo.register['kills'] = [random.randint(0, self.num_servers()-1) for x in range(nr_kills)]
         print('Running for {}s, killing: {}'.format(metazoo.register['time'], metazoo.register['kills']), flush=True)
+        print('''
+Attentiation! In this experiment, we periodically kill and reboot servers.
+Some exceptions will appear in your terminal. Do not be alarmed of them.
+Here we give some of the occuring errors, which are due to killing and not important:
+ 1. "KeeperErrorCode = ConnectionLoss for /ClientNode"
+ 2. "[Thread-18:QuorumCnxManager$SendWorker@559] - Failed to send last message.
+     Shutting down thread. java.nio.channels.ClosedChannelException"
+ 3. "[LearnerHandler-/10.149.0.27:58498:LearnerHandler@444] - Unexpected exception causing shutdown while sock still open"
+
+Happy experimenting!
+''')
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
@@ -64,12 +77,24 @@ class ExampleExperiment(ExperimentInterface):
         nap_time = metazoo.register['time'] / (metazoo.register['nr_kills']+1)
         kills = metazoo.register['kills']
         time.sleep(2*nap_time)
+
+        clean_timer = None
+
+        def clean():
+            print('Cleaning data dir')
+            metazoo.clean_func()
+            clean_timer = threading.Timer(30, clean) # Clean every 30 seconds
+            clean_timer.start()
+
+        clean_timer = threading.Timer(10, clean) # Initially, wait 10 second to clean
+        clean_timer.start()
         for kill in kills:
             if kill == metazoo.gid:
                metazoo.executor.reboot()
             time.sleep(nap_time)
         time.sleep(nap_time)
 
+        clean_timer.cancel()
 
     def post_experiment(self, metazoo):
         print('Experiments are done')

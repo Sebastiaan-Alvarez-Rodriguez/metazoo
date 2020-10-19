@@ -21,7 +21,7 @@ def run_server(debug_mode):
 
     executor = srv.boot(config)
 
-    experiment.experiment_server(config, executor)
+    experiment.experiment_server(config, executor, lambda: srv.clean_data(config))
     
     status = srv.stop(executor)
 

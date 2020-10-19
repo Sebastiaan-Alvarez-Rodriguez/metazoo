@@ -13,7 +13,7 @@ import util.location as loc
 
 # Populates uninitialized config members
 def populate_config(config, debug_mode):
-    config.datadir   = '{}/mahadev/zookeeper/server{}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
+    config.datadir   = '{}/server{}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
     config.log4j_dir = loc.get_server_cfg_dir()
     config.log4j_properties = 'INFO, CONSOLE' if debug_mode else 'ERROR, CONSOLE'
 
@@ -109,6 +109,30 @@ def boot(config):
 
     return executor
 
+def clean_data(config):
+    classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
+    prefix = ':'.join([
+        loc.get_cfg_dir(),
+        config.log4j_dir,
+        ':'.join([file for file in fs.ls(loc.get_lib_dir(), only_files=True, full_paths=True) if file.endswith('.jar')]),
+        ':'.join([file for file in fs.ls(loc.get_build_lib_dir(), only_files=True, full_paths=True) if file.endswith('.jar')]),
+        fs.join(loc.get_build_dir(), 'classes')])
+
+    classpath = '{}:{}'.format(prefix, classpath)
+    zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.PurgeTxnLog'
+
+    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" -cp "{}" {} "{}" "{}" "{}"'.format(
+        config.log4j_dir,
+        config.log4j_properties,
+        classpath, 
+        zoo_main, 
+        config.datadir,
+        '-n',
+        '4')
+    os.system(command)
+    # executor = Executor(command)
+    # executor.run(shell=True)
+    
 
 # Stops Zookeeper instance
 def stop(executor):
