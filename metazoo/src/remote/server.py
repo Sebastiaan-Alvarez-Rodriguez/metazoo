@@ -94,18 +94,19 @@ def boot(config):
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
     conf_location = fs.join(loc.get_cfg_dir(), str(config.gid)+'.cfg')
 
-    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" -cp "{}" {} "{}"'.format(
-        config.log4j_dir,
-        config.log4j_properties,
-        classpath, 
-        zoo_main, 
-        conf_location)
-    executor = Executor(command)
-    executor.run(shell=True)
-
     fs.mkdir(config.datadir, exist_ok=True)
     with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
         file.write(str(config.gid))
+
+    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" -cp "{}" {} "{}"'.format(
+    config.log4j_dir,
+    config.log4j_properties,
+    classpath, 
+    zoo_main, 
+    conf_location)
+    executor = Executor(command)
+    executor.run(shell=True)
+
     return executor
 
 

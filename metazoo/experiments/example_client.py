@@ -46,7 +46,6 @@ class ExampleExperiment(ExperimentInterface):
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
-        print('Hi there! I am executed before the experiment starts!')
         metazoo.register['time'] = 50
         nr_kills = 3
         metazoo.register['nr_kills'] = nr_kills
@@ -55,16 +54,13 @@ class ExampleExperiment(ExperimentInterface):
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
-        print('Hello from client', flush=True)
         sleep_time = metazoo.register['time']
         time.sleep(sleep_time) #Client remains active for a while
-        print('Shutting down client', flush=True)
         metazoo.executor.stop()
         
 
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
-        print('I am server {}, and I am running ZooKeeper now...'.format(metazoo.gid), flush=True) 
         nap_time = metazoo.register['time'] / (metazoo.register['nr_kills']+1)
         kills = metazoo.register['kills']
         time.sleep(2*nap_time)

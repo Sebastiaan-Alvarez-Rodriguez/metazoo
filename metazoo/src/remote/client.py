@@ -35,6 +35,8 @@ def client_distribute_get(config):
 
 # Starts Zookeeper, returns immediately after starting a thread containing our process
 def boot(config):
+    if config.lid == 0:
+        fs.mkdir(loc.get_node_log_dir(), exist_ok=True)
     propfile = fs.join(config.log4j_dir, 'log4j.properties')
     host = client_distribute_get(config)
     
