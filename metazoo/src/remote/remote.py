@@ -48,8 +48,8 @@ def run_client(debug_mode):
     experiment.experiment_client(config, executor)
     status = cli.stop(executor)
 
-    local_log = '.metazoo-log'
+    local_log = '{}.log'.format(config.gid)
     if fs.isfile(loc.get_node_log_dir(), local_log):
         fs.mkdir(loc.get_metazoo_log_dir(), exist_ok=True)
-        fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log+str(config.gid)))
+        fs.mv(fs.join(loc.get_node_log_dir(), local_log), fs.join(loc.get_metazoo_log_dir(), local_log))
     return status

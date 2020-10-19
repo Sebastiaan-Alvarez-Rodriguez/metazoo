@@ -9,7 +9,6 @@ import util.fs as fs
 import util.location as loc
 from remote.executor import Executor
 from remote.config import ServerConfig
-from settings.settings import settings_instance as st
 
 
 def nodenr_to_infiniband(nodenr):
@@ -43,13 +42,13 @@ def boot(config):
     host = client_distribute_get(config)
     
 
-    command = 'java -Dlog4j.configuration=file:"{}" "-Duser={}" "-Dprops={}" -jar {} {} {}'.format(
+    command = 'java -Dlog4j.configuration=file:"{}" "-Dprops={}" -jar {} {} {} {}'.format(
         propfile,
-        st.ssh_user_name,
         config.log4j_properties,
         fs.join(loc.get_metazoo_dep_dir(), 'example_client', 'zookeeper-client.jar'),
         host,
-        config.gid)
+        config.gid,
+        fs.join(loc.get_node_log_dir(), '{}.log'.format(config.gid)))
 
     executor = Executor(command)
     executor.run(shell=True)
