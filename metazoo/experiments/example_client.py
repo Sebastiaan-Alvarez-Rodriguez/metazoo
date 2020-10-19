@@ -20,7 +20,7 @@ class ExampleExperiment(ExperimentInterface):
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
-        return 10
+        return 256
 
     def servers_use_infiniband(self):
         '''True if servers must communicate with eachother over infiniband, False otherwise'''
@@ -36,8 +36,13 @@ class ExampleExperiment(ExperimentInterface):
 
     def clients_core_affinity(self):
         '''Amount of client processes which may be mapped on the same physical node'''
-        return 2
-
+        return 16
+# prc / prcs per core = allocation
+# 256 /            16 = 16
+# 250 /            10 = 25 -> too much
+# 250 /            25 = 10 -> too little
+# 252 /             X = 18 -> 18X = 252 -> X = 252/18 -> X = 14 -> too much
+# 260 /             X = 20 -> 20X = 260 -> X = 260/20 -> X = 13 -> too much
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''

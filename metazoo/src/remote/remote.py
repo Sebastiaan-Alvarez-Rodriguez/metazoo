@@ -14,7 +14,7 @@ def run_server(debug_mode):
     # Write communication file for clients to read
     if config.gid == 0:
         with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'w') as file:
-            file.write('\n'.join(srv.gen_connectionlist(config)))
+            file.write('\n'.join(srv.gen_connectionlist(config, experiment)))
 
     srv.populate_config(config, debug_mode)
     srv.gen_zookeeper_config(config)
@@ -37,12 +37,12 @@ def run_client(debug_mode):
         time.sleep(1) # We must wait until the servers make themselves known
 
     with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'r') as file:
-        # server.0=<ip1>:<clientport> --> <ip1>:<clientport>
-        hosts = [line.split('=')[1].strip() for line in file.readlines()]
+        # <node101>:<clientport1>
+        hosts = [line.split('|')[experiment.clients_use_infiniband].strip() for line in file.readlines()]
 
     config = config_construct_client(experiment, hosts)
     cli.populate_config(config, debug_mode)
-    time.sleep(4)
+    time.sleep(4) # We seriously need to wait for servers to boot up, give them a few seconds
 
     executor = cli.boot(config)
     experiment.experiment_client(config, executor)
