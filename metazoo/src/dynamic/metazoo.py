@@ -9,16 +9,23 @@ class MetaZoo(object):
         self.register = dict()
         self.log = None
         self.host = None
-        self._id = None
-
+        self._gid = None
+        self._lid = None
 
     @property
-    def id(self):
-        return self._id
+    def gid(self):
+        return self._gid
+    @gid.setter
+    def set_gid(self):
+        raise RuntimeError('You cannot set the gid yourself!')
     
-    @id.setter
-    def set_id(self):
-        raise RuntimeError('You cannot set the id yourself!')
+    @property
+    def lid(self):
+        return self._lid
+    @lid.setter
+    def set_lid(self):
+        raise RuntimeError('You cannot set the lid yourself!')
+
 
     # Function to completely prohibit changing (i.e. writing, updating, deleting) MetaZoo register
     def lock():

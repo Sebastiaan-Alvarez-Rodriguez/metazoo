@@ -25,6 +25,14 @@ class ExampleExperiment(ExperimentInterface):
         '''True if clients must communicate with servers over infinband, False otherwise'''
         return False
 
+    def servers_core_affinity(self):
+        '''Amount of server processes which may be mapped on the same physical node'''
+        return 1
+
+    def clients_core_affinity(self):
+        '''Amount of client processes which may be mapped on the same physical node'''
+        return 1
+
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''

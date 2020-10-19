@@ -17,7 +17,8 @@ class Experiment(object):
         self._num_clients = None
         self._servers_use_infiniband = None
         self._clients_use_infiniband = None
-
+        self._servers_core_affinity = None
+        self._clients_core_affinity = None
 
     @property
     def num_servers(self):
@@ -41,20 +42,37 @@ class Experiment(object):
             self._servers_use_infiniband = bool(self.instance.servers_use_infiniband())
         return self._servers_use_infiniband
 
-
+    @property
     def clients_use_infiniband(self):
         if self._clients_use_infiniband == None:
             self._clients_use_infiniband = bool(self.instance.clients_use_infiniband())
         return self._clients_use_infiniband
 
+    @property
+    def servers_core_affinity(self):
+        if self._servers_core_affinity == None:
+            self._servers_core_affinity = int(self.instance.servers_core_affinity())
+            if self._servers_core_affinity < 1:
+                raise RuntimeError('Experiment must specify servers_core_affinity >= 1 (currently got {})'.format(self._servers_core_affinity))
+            if self.num_servers % self._servers_core_affinity != 0:
+                raise RuntimeError('Number of servers must be divisible by server core affinity. {} % {} = {} != 0'.format(self.num_servers, sef._servers_core_affinity, (self.num_servers % self._servers_core_affinity)))
+        return self._servers_core_affinity
 
+    @property
+    def clients_core_affinity(self):
+        if self._clients_core_affinity == None:
+            self._clients_core_affinity = int(self.instance.clients_core_affinity())
+            if self._clients_core_affinity < 1:
+                raise RuntimeError('Experiment must specify clients_core_affinity >= 1 (currently got {})'.format(self._clients_core_affinity))
+            if self.num_clients % self._clients_core_affinity != 0:
+                raise RuntimeError('Number of clients must be divisible by client core affinity. {} % {} = {} != 0'.format(self.num_clients, sef._clients_core_affinity, (self.num_clients % self._clients_core_affinity)))
+        return self._clients_core_affinity
 
 
     @property
     def metazoo(self):
         return self._metazoo
 
-    
 
     def pre_experiment(self):
         val = self.instance.pre_experiment(self._metazoo)
@@ -62,15 +80,18 @@ class Experiment(object):
         return val
 
 
-    def experiment_client(self, host):
+    def experiment_client(self, config):
         self._metazoo = MetaZoo.load() # Inside client node, must load persisted state
-        self._metazoo.host = host
+        self._metazoo._gid = config.gid
+        self._metazoo._lid = config.lid
+        self._metazoo.host = config.host
         return self.instance.experiment_client(self._metazoo)
 
     
-    def experiment_server(self, server_id):
+    def experiment_server(self, config):
         self._metazoo = MetaZoo.load() # Inside server node, must load persisted state
-        self._metazoo._id = server_id
+        self._metazoo._gid = config.gid
+        self._metazoo._lid = config.lid
         return self.instance.experiment_server(self._metazoo)
 
 
@@ -95,7 +116,7 @@ class Experiment(object):
     # Cleans persisted information
     @staticmethod
     def clean():
-        fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'))
+        fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), ignore_errors=True)
 
 
 # Standalone function to get an experiment instance

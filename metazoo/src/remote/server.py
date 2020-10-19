@@ -17,9 +17,9 @@ def nodenr_to_infiniband(nodenr):
 
 # Populates uninitialized config members
 def populate_config(config):
-    config.datadir   = '{0}/crawlspace/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_crawlspace_dir(), config.cnf.gid)
+    config.datadir   = '{0}/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
     config.log4j_loc = loc.get_cfg_dir()
-    config.log4j_properties = 'ERROR,CONSOLE' # Log INFO-level information, send to console
+    config.log4j_properties = 'ERROR,CONSOLE' # Log ERROR-level information, send to console
 
 
 # Generates the Zookeeper config file for this server instance.
@@ -33,20 +33,21 @@ def gen_zookeeper_config(config):
     # server.1=<ip1>:2184:2185 #share node1
     # server.2=<ip2>:2182:2183 #share node2
     # server.3=<ip2>:2184:2185 #share node2
+    # If we are server 1, then server.0 should have 'localhost' instead of <ip1>
     serverlist = []
     srv_id = 0
-    for x in range(idr.num_nodes()):
-        addr = nodenr_to_infiniband(config.cnf.servers[x]) if config.cnf.server_infiniband else 'node{}'.format(config.cnf.servers[x])
+    for x in range(len(config.nodes) // idr.num_procs_per_node()):
+        addr = nodenr_to_infiniband(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
         for y in range(idr.num_procs_per_node()):
             ptl = port_to_leader + 2*y
             pte = port_to_elect + 2*y
-            serverlist.append('server.{0}={1}:{2}:{3}'.format('localhost' if idr.identifier_global() == x else srv_id, addr, ptl, pte))
+            serverlist.append('server.{0}={1}:{2}:{3}'.format(srv_id, addr, ptl, pte))
             srv_id += 1
 
     ticktime         = 2000
     initlimit        = 10
     synclimit        = 5
-    clientport       = 2181
+    clientport       = 2181 + idr.identifier_local()
 
     config_string = '''
 tickTime={0}
@@ -62,7 +63,7 @@ clientPort={4}
     clientport,
     '\n'.join(serverlist))
 
-    with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.cnf.gid)), 'w') as file:
+    with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.gid)), 'w') as file:
         file.write(config_string)
 
 
@@ -77,7 +78,7 @@ def boot(config):
 
     classpath = '{}:{}'.format(prefix, classpath)
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
-    conf_location = fs.join(loc.get_cfg_dir(), str(config.cnf.gid)+'.cfg')
+    conf_location = fs.join(loc.get_cfg_dir(), str(config.gid)+'.cfg')
 
     command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}"'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location)
     executor = Executor(command)
@@ -85,7 +86,7 @@ def boot(config):
 
     fs.mkdir(config.datadir, exist_ok=True)
     with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
-        file.write(str(config.cnf.gid))
+        file.write(str(config.gid))
     return executor
 
 

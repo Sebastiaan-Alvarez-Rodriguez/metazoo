@@ -23,14 +23,54 @@ class Executor(Synchronized):
 
         def target(**kwargs):
             self.process = subprocess.Popen(self.cmd, **kwargs)
-            self.started = True
             self.process.communicate()
             self.stopped = True
 
         self.thread = threading.Thread(target=target, kwargs=kwargs)
         self.thread.start()
+        self.started = True
 
+    # Block until this executor is done
+    def wait(self):
+        if not self.started:
+            raise RuntimeError('Executor with command "{}" not yet started, cannot wait'.format(self.cmd))
+        if self.stopped:
+            return self.process.returncode
+        self.thread.join()
+        return self.process.returncode
 
+    #  Function to run all given executors, with same arguments
+    @staticmethod
+    def run_all(*executors, **kwargs):
+        for x in executors:
+            x.run(**kwargs)
+
+    # Function to wait for all executors.
+    # If stop_on_error is True, we immediately kill all remaining executors
+    # Returns True if all processes sucessfully executed, False otherwise
+    @staticmethod
+    def wait_all(*executors, stop_on_error=True):
+        status = True
+        for x in executors:
+            if x.wait() != 0:
+                if stop_on_error: # We had an error during execution and must stop all now
+                    Executor.stop_all(executors) # Stop all other executors
+                    return False
+                else:
+                    status = False
+        return status
+
+    # Function to stop all given execuors.
+    # If as_generator is True, we return exit status codes as a generator  
+    @staticmethod
+    def stop_all(*executors, as_generator=False):
+        for x in executors:
+            if as_generator:
+                yield x.stop()
+            else:
+                x.stop()
+
+    # Force-stop executor, wait until done
     def stop(self):
         if self.started and not self.stopped:
             if self.thread.is_alive():

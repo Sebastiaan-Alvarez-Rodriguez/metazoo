@@ -48,7 +48,7 @@ def get_remote_metazoo_dir():
     return fs.join(get_remote_metazoo_parent_dir(), 'zookeeper')
 
 def get_remote_crawlspace_dir():
-    return st.remote_crawlspace_dir
+    return fs.join(st.remote_crawlspace_dir, 'crawlspace')
 
 
 #################### Node directories ####################

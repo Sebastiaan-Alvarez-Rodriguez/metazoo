@@ -1,11 +1,12 @@
 #!/usr/bin/python
-import sys
-import os
-import subprocess
 import argparse
+import os
+import sys
+import subprocess
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
 import dynamic.experiment as exp
+from remote.executor import Executor
 import remote.remote as rmt
 from settings.settings import settings_instance as st
 import supplier.ant as ant
@@ -67,12 +68,18 @@ def compile():
     return statuscode == 0
 
 
-def _exec_internal():
-    return rmt.run()
+def _exec_internal_client():
+    return rmt.run_client()
+
+def _exec_internal_server():
+    return rmt.run_server()
 
 
 def exec(force_comp=False):
     print('Connected!', flush=True)
+    if not fs.isdir(loc.get_remote_metazoo_dir()):
+        print('[FAILURE] Missing project on remote. Did you run "{} --init"?'.format(sys.argv[0]))
+        return False
     if (force_comp or not is_compiled()):
         if not compile():
             print('[FAILURE] Could not compile!')
@@ -84,16 +91,32 @@ def exec(force_comp=False):
     experiment = exp.get_experiment()
     num_nodes_total = experiment.num_servers + experiment.num_clients
 
-    command = 'prun -np {} -1 python3 {} --exec_internal'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'))
-    print('Booting network...', flush=True)
-
+    aff_server = experiment.servers_core_affinity
+    nodes_server = experiment.num_servers // aff_server
+    command_server = 'prun -np {} -{} python3 {} --exec_internal_server'.format(nodes_server, aff_server, fs.join(fs.abspath(), 'main.py'))
+    aff_client = experiment.clients_core_affinity
+    nodes_client = experiment.num_clients // aff_client
+    command_client = 'prun -np {} -{} python3 {} --exec_internal_client'.format(nodes_client, aff_client, fs.join(fs.abspath(), 'main.py'))
+    
+    fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
     experiment.pre_experiment()
-    success = os.system(command) == 0
+    print('Booting server network...', flush=True)
+    
+    print('Booting client network...', flush=True)
+    
+    server_exec = Executor(command_server)
+    client_exec = Executor(command_client)
+
+    Executor.run_all(server_exec, client_exec, shell=True)
+    status = Executor.wait_all(server_exec, client_exec)
+
     experiment.post_experiment()
     experiment.clean()
-    print('[SUCCESS] Experiment complete!')
-    return success
-
+    if status:
+        print('[SUCCESS] Experiment complete!')
+    else:
+        print('[FAILURE] Experiment had errors!')
+    return status
 
 
 def export(full_exp=False):
@@ -180,7 +203,8 @@ def main():
     group.add_argument('--clean', help='clean build directory', action='store_true')
     group.add_argument('--check', help='check whether environment has correct tools', action='store_true')
     group.add_argument('--compile', help='compile ancient', action='store_true')
-    group.add_argument('--exec_internal', help=argparse.SUPPRESS, action='store_true')
+    group.add_argument('--exec_internal_client', help=argparse.SUPPRESS, action='store_true')
+    group.add_argument('--exec_internal_server', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--exec', help='call this on the DAS5 to handle server orchestration', action='store_true')
     group.add_argument('--export', help='export only metazoo and script code to the DAS5', action='store_true')
     group.add_argument('--init_internal', help=argparse.SUPPRESS, action='store_true')
@@ -198,8 +222,10 @@ def main():
         check()
     elif args.clean:
         clean()
-    elif args.exec_internal:
-        _exec_internal()
+    elif args.exec_internal_client:
+        _exec_internal_client()
+    elif args.exec_internal_server:
+        _exec_internal_server()
     elif args.exec:
         exec(force_comp=args.force_comp)
     elif args.export:

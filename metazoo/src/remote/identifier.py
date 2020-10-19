@@ -13,9 +13,28 @@ def num_procs_per_node():
     return int(os.environ['SLURM_NPROCS']) // num_nodes()
 
 
+def __sanity_check(rank):
+    host = socket.gethostname()
+    # node117   node117   node118   node118   node119   node119
+    nodenames = os.environ['HOSTS'].split()
+    # node117/0 node117/1 node118/0 node118/1 node119/0 node119/1
+    # prun_nodenames = os.environ['PRUN_HOSTNAMES'].split()
+    # 0         1         2         3         4         5
+    expected_rankings = [x for x in range(len(nodenames))]
+    # 2
+    expected_rank_min = nodenames.index(host)
+    # 3
+    # expected_rank_max = len(nodenames)-1-nodenames[::-1].index(host)
+    expected_rank_max = expected_rank_min-1+num_procs_per_node()
+    if rank < expected_rank_min or rank > expected_rank_max:
+        raise RuntimeError('Sanity check failed! Expected host {} to have rank in [{}, {}], but found: {}'.format(host, expected_rank_min, expected_rank_max, rank))
+    
+
 # Gives a global id, i.e: Different for every process
 def identifier_global():
-    return int(os.environ['PRUN_CPU_RANK'])
+    rank = int(os.environ['PRUN_CPU_RANK'])
+    __sanity_check(rank)
+    return rank
 
 # Gives a local id, i.e: Different between processes on the same node, but potentially equivalent between 2 or more processes
 def identifier_local():
@@ -33,11 +52,9 @@ def identifier_local():
     # expected_rank_max = len(nodenames)-1-nodenames[::-1].index(host)
     expected_rank_max = expected_rank_min-1+num_procs_per_node()
     # 3
-    my_rank = identifier_global()
-    if my_rank < expected_rank_min or my_rank > expected_rank_max:
-        raise RuntimeError('Expected rank to be in [{}, {}], but found: {}'.format(expected_rank_min, expected_rank_max, my_rank))
+    rank = identifier_global()
     # 1
-    local_rank = my_rank - expected_rank_min
+    local_rank = rank - expected_rank_min
     return local_rank
 '''
 End goal:

@@ -1,46 +1,64 @@
+import abc
 import os
 import socket
 
 import remote.identifier as idr
 
-# Returns globally equivalent list of nodes with server and client designation
-# The returned value is a tuple, with first a list of server nodes, and second a list of client nodes
-def get_node_assignment(experiment):
+
+# Constructs a client config, populates it, and returns it
+def config_construct_client(experiment):
     nodenumbers = [int(nodename[4:]) for nodename in os.environ['HOSTS'].split()]
     nodenumbers.sort()
-    if not len(nodenumbers) == experiment.num_servers + experiment.num_clients:
-        raise RuntimeError('Only {} nodes allocated for {} servers and {} clients'.format(len(nodenumbers), experiment.num_servers, experiment.num_clients))
-    if nodenumbers[experiment.num_servers-1] == nodenumbers[experiment.num_servers]:
-        raise RuntimeError('{} servers, {} clients: Cannot map both a client and a server on node {} (this is never allowed)'.format(experiment.num_servers, experiment.num_clients, nodenumbers[experiment.num_servers]))
-    return (nodenumbers[:experiment.num_servers], nodenumbers[experiment.num_servers:])
+    if not len(nodenumbers) == experiment.num_clients:
+        raise RuntimeError('Allocated incorrect number of nodes ({}) for {} clients'.format(len(nodenumbers), experiment.num_clients))
+    return ClientConfig(experiment, nodenumbers)
+
+# Constructs a server config, populates it, and returns it
+def config_construct_server(experiment):
+    nodenumbers = [int(nodename[4:]) for nodename in os.environ['HOSTS'].split()]
+    nodenumbers.sort()
+    if not len(nodenumbers) == experiment.num_servers:
+        raise RuntimeError('Allocated incorrect number of nodes ({}) for {} servers'.format(len(nodenumbers), experiment.num_servers))
+    return ServerConfig(experiment, nodenumbers)
 
 
-# Constructs either a (server/client) config, populates it, and returns it
-def config_construct(experiment):
-    config = Config(experiment)
-    if int(socket.gethostname()[4:]) in config.servers: # if hostname is in server list
-        return ServerConfig(config) # we have a server
-    return ClientConfig(config) #otherwise, we have a client
-
-
-class Config(object):
-    def __init__(self, experiment):
+class Config(metaclass=abc.ABCMeta):
+    def __init__(self, experiment, nodes):
         # List of server node numbers and client node numbers
         # (e.g. [114, 116,...],corresponding to 'node114' and 'node116' hosts)
-        self.servers, self.clients = get_node_assignment(experiment)
+        self._nodes = nodes
 
-        self.server_infiniband = experiment.servers_use_infiniband
-        self.client_infiniband = experiment.clients_use_infiniband
+        self._server_infiniband = experiment.servers_use_infiniband
+        self._client_infiniband = experiment.clients_use_infiniband
 
-        self.gid = idr.identifier_global()
-        self.lid = idr.identifier_local()
+        self._gid = idr.identifier_global()
+        self._lid = idr.identifier_local()
+
+    @property
+    def server_infiniband(self):
+        return self._server_infiniband
+    
+    @property
+    def client_infiniband(self):
+        return self._client_infiniband
+
+    @property
+    def lid(self):
+        return self._lid
+
+    @property
+    def gid(self):
+        return self._gid
+
+    @property
+    def nodes(self):
+        return self._nodes
+    
 
 
-class ServerConfig(object):
-    def __init__(self, config):
-        super(ServerConfig, self).__init__()
-        self.cnf = config
-
+class ServerConfig(Config):
+    def __init__(self, experiment, nodes):
+        super(ServerConfig, self).__init__(experiment, nodes)
         # Directory containing data for this server
         self.datadir = None
         # Directory where log4j writes its logs, if we specify that log4j should write to file
@@ -48,10 +66,48 @@ class ServerConfig(object):
         # Properties to hand to log4j
         self.log4j_properties = None
 
+    @property
+    def server_infiniband(self):
+        return super().server_infiniband
+    
+    @property
+    def client_infiniband(self):
+        return super().client_infiniband
 
-class ClientConfig(object):
-    def __init__(self, config):
-        super(ClientConfig, self).__init__()
-        self.cnf = config
+    @property
+    def lid(self):
+        return super().lid
 
-        self.host = 'node' + str(config.servers[0]) + ':2181'
+    @property
+    def gid(self):
+        return super().gid
+
+    @property
+    def nodes(self):
+        return super().nodes
+
+
+class ClientConfig(Config):
+    def __init__(self, experiment, nodes):
+        super(ClientConfig, self).__init__(experiment, nodes)
+        self.host = 'node' + str(nodes[0]) + ':2181'
+
+    @property
+    def server_infiniband(self):
+        return super().server_infiniband
+    
+    @property
+    def client_infiniband(self):
+        return super().client_infiniband
+
+    @property
+    def lid(self):
+        return super().lid
+
+    @property
+    def gid(self):
+        return super().gid
+
+    @property
+    def nodes(self):
+        return super().nodes
