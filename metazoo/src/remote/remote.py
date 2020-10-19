@@ -38,7 +38,7 @@ def run_client(debug_mode):
 
     with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'r') as file:
         # <node101>:<clientport1>
-        hosts = [line.split('|')[experiment.clients_use_infiniband].strip() for line in file.readlines()]
+        hosts = [line.strip() for line in file.readlines()]
 
     config = config_construct_client(experiment, hosts)
     cli.populate_config(config, debug_mode)
