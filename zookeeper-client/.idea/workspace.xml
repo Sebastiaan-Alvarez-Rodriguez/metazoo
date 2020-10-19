@@ -25,7 +25,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58be2408-ab0a-48ed-9141-9ebf471ec33b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/log4j_1_2_15.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/log4j_1_2_15.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../metazoo/experiments/example_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/../metazoo/experiments/example_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../metazoo/src/dynamic/experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/../metazoo/src/dynamic/experiment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../metazoo/src/remote/executor.py" beforeDir="false" afterPath="$PROJECT_DIR$/../metazoo/src/remote/executor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../metazoo/src/remote/remote.py" beforeDir="false" afterPath="$PROJECT_DIR$/../metazoo/src/remote/remote.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/artifacts/zookeeper_client_jar/zookeeper-client.jar" beforeDir="false" afterPath="$PROJECT_DIR$/out/artifacts/zookeeper_client_jar/zookeeper-client.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/FailureClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FailureClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ZooKeeperConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ZooKeeperConnection.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,6 +83,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
     <state x="801" y="261" width="374" height="592" key="#com.intellij.ide.util.MemberChooser" timestamp="1603042555700">

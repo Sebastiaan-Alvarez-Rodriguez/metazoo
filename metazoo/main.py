@@ -67,11 +67,11 @@ def compile():
     return statuscode == 0
 
 
-def _exec_internal():
-    return rmt.run()
+def _exec_internal(debug_mode=False):
+    return rmt.run(debug_mode=debug_mode)
 
 
-def exec(force_comp=False, override_conf=False):
+def exec(force_comp=False, override_conf=False, debug_mode=False):
     print('Connected!', flush=True)
     if (force_comp or not is_compiled()):
         if not compile():
@@ -88,7 +88,7 @@ def exec(force_comp=False, override_conf=False):
     experiment = exp.get_experiment()
     num_nodes_total = experiment.num_servers + experiment.num_clients
 
-    command = 'prun -np {} -1 python3 {} --exec_internal'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'))
+    command = 'prun -np {} -1 python3 {} --exec_internal {}'.format(num_nodes_total, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
     print('Booting network...', flush=True)
 
     experiment.pre_experiment()
@@ -159,12 +159,12 @@ This way, you will not be asked for your password at every command.
         print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
 
-def remote(force_exp=False, force_comp=False, override_conf=False):
+def remote(force_exp=False, force_comp=False, override_conf=False, debug_mode=False):
     if force_exp and not export(full_exp=True):
         print('[FAILURE] Could not export data')
         return False
 
-    program = '--exec'+(' -c' if force_comp else '')+(' -o' if override_conf else '')
+    program = '--exec'+(' -c' if force_comp else '')+(' -o' if override_conf else '')+('-d' if debug_mode else '')
 
     command = 'ssh {0} "python3 {1}/zookeeper/metazoo/main.py {2}"'.format(
         rmt.get_remote(),
@@ -189,6 +189,7 @@ def main():
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
     parser.add_argument('-e', '--force-export', dest='force_exp', help='Forces to re-do the export phase', action='store_true')
     parser.add_argument('-o', '--override-conf', dest='override_conf', help='Forces MetaZoo to ignore existing configs', action='store_true')
+    parser.add_argument('-d', '--debug-mode', dest='debug_mode', help='Run remote in debug mode', action='store_true')
     args = parser.parse_args()
 
 
@@ -199,9 +200,9 @@ def main():
     elif args.clean:
         clean()
     elif args.exec_internal:
-        _exec_internal()
+        _exec_internal(debug_mode=args.debug_mode)
     elif args.exec:
-        exec(force_comp=args.force_comp, override_conf=args.override_conf)
+        exec(force_comp=args.force_comp, override_conf=args.override_conf, debug_mode=args.debug_mode)
     elif args.export:
         export(full_exp=True)
     elif args.init_internal:
@@ -209,7 +210,7 @@ def main():
     elif args.init:
         init()
     elif args.remote:
-        remote(force_exp=args.force_exp, force_comp=args.force_comp, override_conf=args.override_conf)
+        remote(force_exp=args.force_exp, force_comp=args.force_comp, override_conf=args.override_conf, debug_mode=args.debug_mode)
     
 
     if len(sys.argv) == 1:

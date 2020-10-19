@@ -58,7 +58,7 @@ clientPort={4}
 
 
 # Starts Zookeeper, returns immediately after starting a thread containing our process
-def boot(config):
+def boot(config, debug_mode=False):
     # return os.system('bash {0} start &'.format(fs.join(get_remote_bin_dir(), 'zkServer.sh'))) == 0
 
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
@@ -72,7 +72,7 @@ def boot(config):
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
     conf_location = fs.join(loc.get_cfg_dir(), str(config.server_id)+'.cfg')
 
-    command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}"'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location)
+    command = 'java "-Dzookeeper.log.dir={}" "-Dzookeeper.root.logger={}" -cp "{}" {} "{}" {}'.format(config.log4j_loc, config.log4j_properties, classpath, zoo_main, conf_location, '> /dev/null 2>&1' if not debug_mode else '')
     executor = Executor(command)
     executor.run(shell=True)
 

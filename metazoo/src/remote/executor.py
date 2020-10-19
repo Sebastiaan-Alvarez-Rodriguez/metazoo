@@ -12,6 +12,7 @@ class Executor(Synchronized):
         self.stopped = False
         self.thread = None
         self.process = None
+        self.kwargs = None
 
 
 
@@ -20,6 +21,8 @@ class Executor(Synchronized):
             raise RuntimeError('Executor already started. Make a new Executor for a new run')
         if self.stopped:
             raise RuntimeError('Executor already stopped. Make a new Executor for a new run')
+        if self.kwargs == None:
+            self.kwargs = kwargs
 
         def target(**kwargs):
             self.process = subprocess.Popen(self.cmd, **kwargs)
@@ -36,10 +39,16 @@ class Executor(Synchronized):
             if self.thread.is_alive():
                 self.process.terminate()
                 self.thread.join()
+                self.stopped = True
         return self.process.returncode
         # if self.started and not self.stopped:
         #     os.system('kill -9 {0}'.format(thread.get_native_id()))
 
+    def reboot(self):
+        self.stop()
+        self.started = False
+        self.stopped = False
+        self.run(**self.kwargs)
 
     def get_pid(self):
         if (not self.started) or self.stopped or self.process == None:

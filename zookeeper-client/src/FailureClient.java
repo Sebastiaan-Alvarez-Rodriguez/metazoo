@@ -11,10 +11,11 @@ import java.util.TimerTask;
 public class FailureClient {
     private static ZnodeManager nodes;
     private static int operations;
-    private static final LinkedList<Integer> ops = new LinkedList<Integer>();
+    private static final LinkedList<Integer> ops = new LinkedList<>();
     private static Timer timer;
     private static String node_name;
-    private static volatile boolean CONTINUE = true;
+    private static ZooKeeperConnection conn;
+    private static Logger LOG;
 
     private static final int NR_READS = 70;
     private static final int NR_WRITES = 30;
@@ -43,8 +44,7 @@ public class FailureClient {
                        ++operations;
                        nodes.setData_async(node_name, data, this);
                    } catch (Exception e) {
-                       System.out.println(e.getMessage());
-                       CONTINUE = false;
+                       LOG.debug(e.getMessage());
                    }
                }
            }
@@ -66,43 +66,46 @@ public class FailureClient {
            for (int i = 0; i < NR_WRITES; ++i)
                nodes.setData_async(node_name, data, sb);
 
-           //waiting for servers to quit
-           while (CONTINUE);
+           //waiting for process to be quit
+           while (true);
+    }
+
+    public static void shutdown() {
+        try {
+            nodes.delete(node_name);
+            conn.close();
+        } catch (Exception e) {
+            LOG.debug(e.getMessage());
+        }
+        timer.cancel();
+        timer.purge();
+        for(Integer i : ops)
+            LOG.warn("ops: "+i.toString());
     }
 
     public static void main(String[] args)  {
+        Runtime.getRuntime().addShutdownHook(new Thread(FailureClient::shutdown));
+
         if (args.length != 2) {
             System.out.println("[ERROR] expected two arguments");
             System.exit(1);
         }
-        Logger LOG = Logger.getLogger(FailureClient.class);
+        LOG = Logger.getLogger(FailureClient.class);
         String host = args[0];
         int id = Integer.parseInt(args[1]);
         node_name = "/ClientNode" + id;
-        String message = "I am Client"+ Integer.toString(id);
+        String message = "I am Client"+ id;
         LOG.warn(message);
         operations = 0;
-        ZooKeeperConnection conn = new ZooKeeperConnection();
+        conn = new ZooKeeperConnection();
         try {
             ZooKeeper zoo = conn.connect(host);
             nodes = new ZnodeManager(zoo);
             run();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            LOG.debug(e.getMessage());
         } finally {
-            //Chose WARN level so we can turn off INFO
-            try {
-                nodes.delete(node_name);
-                conn.close();
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
-            timer.cancel();
-            timer.purge();
-            for(Integer i : ops)
-                LOG.warn("ops: "+i.toString());
+            shutdown();
         }
-
-
     }
 }

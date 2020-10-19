@@ -41,7 +41,7 @@ def construct_config(experiment):
     return ClientConfig(config) #otherwise, we have a client
 
 
-def run():
+def run(debug_mode=False):
     experiment = Experiment.load()
     config = construct_config(experiment)
 
@@ -53,9 +53,9 @@ def run():
         srv.gen_zookeeper_config(config)
 
         print('Server with id {} generated {}.cfg'.format(config.server_id, config.server_id), flush=True)
-        executor = srv.boot(config)
+        executor = srv.boot(config, debug_mode)
 
-        experiment.experiment_server(config.server_id)
+        experiment.experiment_server(config.server_id, executor)
         
         srv.stop(executor)
         #TODO: fix
@@ -69,7 +69,7 @@ def run():
         if config.host == None:
             raise RuntimeError('Oh oh , should not happen')
 
-        experiment.experiment_client(config.host)
+        experiment.experiment_client(config.host, executor)
         cli.stop(executor)
 
         local_log = '.metazoo-log'

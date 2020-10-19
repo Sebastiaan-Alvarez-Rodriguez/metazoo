@@ -1,4 +1,5 @@
 __pycache__/
-deps/*
+/deps/*
 !deps/example_client/
 /metazoo.cfg
+*.jar
