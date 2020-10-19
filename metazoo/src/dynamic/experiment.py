@@ -105,6 +105,7 @@ class Experiment(object):
     # Save all required information, so nodes can reconstruct our object
     def persist(self):
         self._metazoo.persist()
+        fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), ignore_errors=True)
         with open(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), 'w') as file:
             file.write('{}|{}'.format(self.location, self.modulename))
 

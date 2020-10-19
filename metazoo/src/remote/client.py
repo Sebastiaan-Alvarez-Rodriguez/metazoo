@@ -5,14 +5,12 @@ import os
 import socket
 import time
 
+from remote.config import ServerConfig
+import remote.ip as ip
 import util.fs as fs
 import util.location as loc
-from remote.executor import Executor
-from remote.config import ServerConfig
+from util.executor import Executor
 
-
-def nodenr_to_infiniband(nodenr):
-    return '10.149.1.'+str(nodenr)[1:]
 
 def populate_config(config, debug_mode):
     config.log4j_dir = loc.get_client_cfg_dir()
@@ -37,7 +35,6 @@ def client_distribute_get(config):
 
 # Starts Zookeeper, returns immediately after starting a thread containing our process
 def boot(config):
-    prepare_classpath_symlinks()
     propfile = fs.join(config.log4j_dir, 'log4j.properties')
     host = client_distribute_get(config)
     

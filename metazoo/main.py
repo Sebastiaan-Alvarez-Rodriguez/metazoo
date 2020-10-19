@@ -6,11 +6,12 @@ import subprocess
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
 import dynamic.experiment as exp
-from remote.executor import Executor
 import remote.remote as rmt
+import remote.client as cli
 from settings.settings import settings_instance as st
 import supplier.ant as ant
 import supplier.java as jv
+from util.executor import Executor
 import util.location as loc
 import util.fs as fs
 
@@ -91,6 +92,8 @@ def exec(force_comp=False, debug_mode=False):
     experiment = exp.get_experiment()
     num_nodes_total = experiment.num_servers + experiment.num_clients
 
+    # TODO: separate client better from src
+    cli.prepare_classpath_symlinks()
 
     aff_server = experiment.servers_core_affinity
     nodes_server = experiment.num_servers // aff_server

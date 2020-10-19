@@ -3,16 +3,12 @@
 
 import os
 
+from remote.config import ServerConfig
+import remote.identifier as idr
+import remote.ip as ip
+from util.executor import Executor
 import util.fs as fs
 import util.location as loc
-from remote.config import ServerConfig
-from remote.executor import Executor
-import remote.identifier as idr
-
-
-def nodenr_to_infiniband(nodenr):
-    return '10.149.1.'+str(nodenr)[1:]
-
 
 
 # Populates uninitialized config members
@@ -21,22 +17,19 @@ def populate_config(config, debug_mode):
     config.log4j_dir = loc.get_server_cfg_dir()
     config.log4j_properties = 'INFO, CONSOLE' if debug_mode else 'ERROR, CONSOLE'
 
-def gen_connectionlist(config):
+def gen_connectionlist(config, experiment):
     # End goal:
-    # server.0=<ip1>:<clientport1> #share node1
-    # server.1=<ip1>:<clientport2> #share node1
-    # server.2=<ip2>:<clientport1> #share node2
-    # server.3=<ip2>:<clientport2> #share node2
-    # If we are server 1, then server.0 should have 'localhost' instead of <ip1>
+    # <node101>:<clientport1>
+    # <node101>:<clientport2>
+    # <node102>:<clientport1>
+    # <node102>:<clientport2>
     clientport = 2181
     serverlist = []
-    srv_id = 0
     for x in range(len(config.nodes) // idr.num_procs_per_node()):
-        addr = nodenr_to_infiniband(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
+        addr = ip.node_to_infiniband_ip(config.nodes[x]) if experiment.clients_use_infiniband else 'node{:03d}'.format(config.nodes[x]) 
         for y in range(idr.num_procs_per_node()):
             cport = clientport + (idr.num_procs_per_node()+1)*y
-            serverlist.append('server.{}={}:{}'.format(srv_id, addr, cport))
-            srv_id += 1
+            serverlist.append('{}:{}'.format(addr, cport))
     return serverlist
 
 # Generates a list of servers, which should be the same everywhere. Returns as list
@@ -53,7 +46,7 @@ def gen_serverlist(config):
     serverlist = []
     srv_id = 0
     for x in range(len(config.nodes) // idr.num_procs_per_node()):
-        addr = nodenr_to_infiniband(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
+        addr = ip.node_to_infiniband_ip(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
         for y in range(idr.num_procs_per_node()):
             ptl = port_to_leader + (idr.num_procs_per_node()+1)*y
             pte = port_to_elect + (idr.num_procs_per_node()+1)*y
