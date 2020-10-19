@@ -29,7 +29,7 @@ def prepare_classpath_symlinks():
 # Starts Zookeeper, returns immediately after starting a thread containing our process
 def boot(config):
     prepare_classpath_symlinks()
-    command = 'java -jar {} {}'.format(fs.join(loc.get_metazoo_dep_dir(), 'example_client', 'zookeeper-client.jar'), config.host)
+    command = 'java -jar {} {}'.format(fs.join(loc.get_metazoo_dep_dir(), 'example_client', 'zookeeper-client.jar'), config.hosts[0])
     executor = Executor(command)
     executor.run(shell=True)
     return executor

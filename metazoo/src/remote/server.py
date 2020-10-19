@@ -17,37 +17,58 @@ def nodenr_to_infiniband(nodenr):
 
 # Populates uninitialized config members
 def populate_config(config):
-    config.datadir   = '{0}/mahadev/zookeeper/server{1}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
+    config.datadir   = '{}/mahadev/zookeeper/server{}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
     config.log4j_loc = loc.get_cfg_dir()
     config.log4j_properties = 'ERROR,CONSOLE' # Log ERROR-level information, send to console
 
-
-# Generates the Zookeeper config file for this server instance.
-# Config is written to zookeeper-release-3.3.0/conf/<serverid>.cfg
-def gen_zookeeper_config(config):
-    port_to_leader = 2182
-    port_to_elect  = 2183
-    
-    # This list should be the same everywhere. End goal:
-    # server.0=<ip1>:2182:2183 #share node1
-    # server.1=<ip1>:2184:2185 #share node1
-    # server.2=<ip2>:2182:2183 #share node2
-    # server.3=<ip2>:2184:2185 #share node2
+def gen_connectionlist(config):
+    # End goal:
+    # server.0=<ip1>:<clientport1> #share node1
+    # server.1=<ip1>:<clientport2> #share node1
+    # server.2=<ip2>:<clientport1> #share node2
+    # server.3=<ip2>:<clientport2> #share node2
     # If we are server 1, then server.0 should have 'localhost' instead of <ip1>
+    clientport = 2181
     serverlist = []
     srv_id = 0
     for x in range(len(config.nodes) // idr.num_procs_per_node()):
         addr = nodenr_to_infiniband(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
         for y in range(idr.num_procs_per_node()):
-            ptl = port_to_leader + 2*y
-            pte = port_to_elect + 2*y
+            cport = clientport + (idr.num_procs_per_node()+1)*y
+            serverlist.append('server.{}={}:{}'.format(srv_id, addr, cport))
+            srv_id += 1
+    return serverlist
+
+# Generates a list of servers, which should be the same everywhere. Returns as list
+def gen_serverlist(config):
+    # End goal:
+    # server.0=<ip1>:2182:2183 #share node1 cport=2181
+    # server.1=<ip1>:2185:2186 #share node1 cport=2184
+    # server.2=<ip2>:2182:2183 #share node2 cport=2181
+    # server.3=<ip2>:2185:2186 #share node2 cport=2184
+    # If we are server 1, then server.0 should have 'localhost' instead of <ip1>
+    port_to_leader = 2182
+    port_to_elect  = 2183
+
+    serverlist = []
+    srv_id = 0
+    for x in range(len(config.nodes) // idr.num_procs_per_node()):
+        addr = nodenr_to_infiniband(config.nodes[x]) if config.server_infiniband else 'node{}'.format(config.nodes[x])
+        for y in range(idr.num_procs_per_node()):
+            ptl = port_to_leader + (idr.num_procs_per_node()+1)*y
+            pte = port_to_elect + (idr.num_procs_per_node()+1)*y
             serverlist.append('server.{0}={1}:{2}:{3}'.format(srv_id, addr, ptl, pte))
             srv_id += 1
+    return serverlist
 
+
+# Generates the Zookeeper config file for this server instance.
+# Config is written to zookeeper-release-3.3.0/conf/<serverid>.cfg
+def gen_zookeeper_config(config):
     ticktime         = 2000
     initlimit        = 10
     synclimit        = 5
-    clientport       = 2181 + idr.identifier_local()
+    clientport       = 2181 + (idr.num_procs_per_node()+1)*idr.identifier_local()
 
     config_string = '''
 tickTime={0}
@@ -61,7 +82,7 @@ clientPort={4}
     synclimit,
     config.datadir,
     clientport,
-    '\n'.join(serverlist))
+    '\n'.join(gen_serverlist(config)))
 
     with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.gid)), 'w') as file:
         file.write(config_string)

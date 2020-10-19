@@ -6,12 +6,12 @@ import remote.identifier as idr
 
 
 # Constructs a client config, populates it, and returns it
-def config_construct_client(experiment):
+def config_construct_client(experiment, hosts):
     nodenumbers = [int(nodename[4:]) for nodename in os.environ['HOSTS'].split()]
     nodenumbers.sort()
     if not len(nodenumbers) == experiment.num_clients:
         raise RuntimeError('Allocated incorrect number of nodes ({}) for {} clients'.format(len(nodenumbers), experiment.num_clients))
-    return ClientConfig(experiment, nodenumbers)
+    return ClientConfig(experiment, nodenumbers, hosts)
 
 # Constructs a server config, populates it, and returns it
 def config_construct_server(experiment):
@@ -88,9 +88,9 @@ class ServerConfig(Config):
 
 
 class ClientConfig(Config):
-    def __init__(self, experiment, nodes):
+    def __init__(self, experiment, nodes, hosts):
         super(ClientConfig, self).__init__(experiment, nodes)
-        self.host = 'node' + str(nodes[0]) + ':2181'
+        self._hosts = hosts
 
     @property
     def server_infiniband(self):
@@ -111,3 +111,8 @@ class ClientConfig(Config):
     @property
     def nodes(self):
         return super().nodes
+
+    @property
+    def hosts(self):
+        return self._hosts
+    

@@ -84,7 +84,7 @@ class Experiment(object):
         self._metazoo = MetaZoo.load() # Inside client node, must load persisted state
         self._metazoo._gid = config.gid
         self._metazoo._lid = config.lid
-        self._metazoo.host = config.host
+        self._metazoo.hosts = config.hosts
         return self.instance.experiment_client(self._metazoo)
 
     

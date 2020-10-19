@@ -99,6 +99,7 @@ def exec(force_comp=False):
     command_client = 'prun -np {} -{} python3 {} --exec_internal_client'.format(nodes_client, aff_client, fs.join(fs.abspath(), 'main.py'))
     
     fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
+    fs.mkdir(loc.get_remote_crawlspace_dir())
     experiment.pre_experiment()
     print('Booting server network...', flush=True)
     
