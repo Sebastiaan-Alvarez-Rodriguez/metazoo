@@ -1,4 +1,9 @@
 import org.apache.zookeeper.*;
+import org.apache.zookeeper.server.PurgeTxnLog;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 
 public class ZnodeManager {
 	private static ZooKeeper zoo;
@@ -35,5 +40,11 @@ public class ZnodeManager {
 	//return the current version of the zNode
 	private int get_version(String path) throws KeeperException, InterruptedException {
 		return zoo.exists(path, true).getVersion();
+	}
+
+	//purges snapshots and logs except the last num
+	public void purge(String dataDirPath, int num) throws IOException {
+		File file = Paths.get(dataDirPath).toFile();
+		PurgeTxnLog.purge(file, file, num);
 	}
 }

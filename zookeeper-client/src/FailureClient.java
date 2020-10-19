@@ -70,7 +70,7 @@ public class FailureClient {
                nodes.setData_async(node_name, data, sb);
 
            //waiting for process to be quit
-           while (true);
+           while (true) ;
     }
 
     public static void shutdown() {
@@ -80,8 +80,10 @@ public class FailureClient {
         } catch (Exception e) {
             LOG.error(e.getMessage());
         }
-        timer.cancel();
-        timer.purge();
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+        }
         try {
             FileWriter writer = new FileWriter(logfile);
             for(Integer i : ops)
@@ -93,8 +95,8 @@ public class FailureClient {
     }
 
     public static void main(String[] args)  {
-        if (args.length != 3) {
-            System.out.println("[ERROR] expected three arguments");
+        if (args.length != 4) {
+            System.out.println("[ERROR] expected four arguments");
             System.exit(1);
         }
 
