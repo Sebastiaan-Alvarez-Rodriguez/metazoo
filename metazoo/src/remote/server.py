@@ -15,7 +15,7 @@ import util.location as loc
 def populate_config(config, debug_mode):
     config.datadir   = '{}/server{}/data'.format(loc.get_remote_crawlspace_dir(), config.gid)
     config.log4j_dir = loc.get_server_cfg_dir()
-    config.log4j_properties = 'INFO, CONSOLE' if debug_mode else 'ERROR, CONSOLE'
+    config.log4j_properties = 'INFO, FILE'
 
 # Generates a connectionlist, which client nodes read to decide which host to connect to 
 def gen_connectionlist(config, experiment):
@@ -100,9 +100,13 @@ def boot(config):
     with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
         file.write(str(config.gid))
 
-    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" -cp "{}" {} "{}"'.format(
+
+    local_log = 'server{}.log'.format(config.gid)
+
+    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" "-Dfile={}" -cp "{}" {} "{}"'.format(
     config.log4j_dir,
     config.log4j_properties,
+    fs.join(loc.get_node_log_dir(), local_log),
     classpath, 
     zoo_main, 
     conf_location)

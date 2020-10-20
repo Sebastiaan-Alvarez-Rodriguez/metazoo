@@ -11,6 +11,11 @@ def get_metazoo_experiment_dir():
 def get_metazoo_log_dir():
     return fs.join(fs.abspath(), 'logs')
 
+def get_metazoo_results_dir():
+    return fs.join(fs.abspath(), 'results')
+
+def get_metazoo_graphs_dir():
+    return fs.join(fs.abspath(), 'graphs')
 
 #################### Zookeeper directories ####################
 def get_zookeeper_dir():

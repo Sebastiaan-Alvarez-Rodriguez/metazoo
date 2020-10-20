@@ -42,8 +42,8 @@ class ExampleExperiment(ExperimentInterface):
 # prc / prcs per core = allocation
 # 256 /             8 = 32
 # 250 /            10 = 25
-# 260 /             X = 20 -> 20X = 260 -> X = 260/20 -> X = 13
-# 252 /             X = 18 -> 18X = 252 -> X = 252/18 -> X = 14
+# 260 /            13 = 20 
+# 252 /            14 = 18
 # 256 /            16 = 16
 # 250 /            25 = 10
 
@@ -81,7 +81,7 @@ Happy experimenting!
         '''Execution occuring on ALL server nodes'''
         nap_time = metazoo.register['time'] / (metazoo.register['nr_kills']+1)
         kills = metazoo.register['kills']
-        time.sleep(2*nap_time)
+        time.sleep(nap_time)
 
         clean_repeater = Repeater(metazoo.clean_func, 20) # Clean data directory every 20 seconds
         clean_repeater.start()        

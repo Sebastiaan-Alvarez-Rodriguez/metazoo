@@ -2,12 +2,12 @@
 import argparse
 import os
 import sys
-import subprocess
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
 import dynamic.experiment as exp
 import remote.remote as rmt
 import remote.client as cli
+import result.results as res
 from settings.settings import settings_instance as st
 import supplier.ant as ant
 import supplier.java as jv
@@ -166,12 +166,6 @@ def _init_internal():
 
 
 def init():
-    print('''
-NOTICE: MetaZoo uses SSH to communicate with the DAS5.
-In order to have a smooth experience, Install a SSH-key
-to the DAS5 without password protection.
-This way, you will not be asked for your password at every command.
-''')
     print('Initializing MetaZoo...')
     if not export(full_exp=True):
         print('[FAILURE] Unable to export to DAS5 remote using user/ssh-key "{}"'.format(st.ssh_key_name))
@@ -198,13 +192,15 @@ def remote(force_exp=False, force_comp=False, debug_mode=False):
     print('Connecting using key "{0}"...'.format(st.ssh_key_name))
     return os.system(command) == 0
 
-
 def settings():
     st.change_settings()
 
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    subparser = parser.add_subparsers()
+    res.subparser(subparser)
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--clean', help='clean build directory', action='store_true')
     group.add_argument('--check', help='check whether environment has correct tools', action='store_true')
@@ -216,14 +212,16 @@ def main():
     group.add_argument('--init_internal', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--init', help='Initialize MetaZoo to run code on the DAS5', action='store_true')
     group.add_argument('--remote', help='execute code on the DAS5 from your local machine', action='store_true')
+    # group.add_argument('--results', nargs='+', help='Process results on local machine')
     group.add_argument('--settings', help='Change settings', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
     parser.add_argument('-d', '--debug-mode', dest='debug_mode', help='Run remote in debug mode', action='store_true')
     parser.add_argument('-e', '--force-export', dest='force_exp', help='Forces to re-do the export phase', action='store_true')
     args = parser.parse_args()
 
-
-    if args.compile: 
+    if res.result_args_set(args):
+        res.results(parser, args)
+    elif args.compile: 
         compile()
     elif args.check:
         check()

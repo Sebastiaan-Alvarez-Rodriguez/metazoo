@@ -1,3 +1,5 @@
+import threading
+
 class Repeater(threading.Thread):
     '''Simple object to repeat actions on a separate thread, every period seconds'''
     def __init__(self, func, period):
