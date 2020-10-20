@@ -83,6 +83,8 @@ public class FailureClient {
         if (timer != null) {
             timer.cancel();
             timer.purge();
+        } else {
+            System.out.println("[CLIENT] [ERROR] Unexpected Error");
         }
         try {
             FileWriter writer = new FileWriter(logfile);
@@ -95,8 +97,8 @@ public class FailureClient {
     }
 
     public static void main(String[] args)  {
-        if (args.length != 4) {
-            System.out.println("[ERROR] expected four arguments");
+        if (args.length != 3) {
+            System.out.println("[CLIENT] [ERROR] expected three arguments");
             System.exit(1);
         }
 
