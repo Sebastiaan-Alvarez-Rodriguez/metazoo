@@ -38,13 +38,14 @@ class ExampleExperiment(ExperimentInterface):
 
     def clients_core_affinity(self):
         '''Amount of client processes which may be mapped on the same physical node'''
-        return 16
+        return 8
 # prc / prcs per core = allocation
+# 256 /             8 = 32
+# 250 /            10 = 25
+# 260 /             X = 20 -> 20X = 260 -> X = 260/20 -> X = 13
+# 252 /             X = 18 -> 18X = 252 -> X = 252/18 -> X = 14
 # 256 /            16 = 16
-# 250 /            10 = 25 -> too much
-# 250 /            25 = 10 -> too little
-# 252 /             X = 18 -> 18X = 252 -> X = 252/18 -> X = 14 -> too much
-# 260 /             X = 20 -> 20X = 260 -> X = 260/20 -> X = 13 -> too much
+# 250 /            25 = 10
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
@@ -55,13 +56,17 @@ class ExampleExperiment(ExperimentInterface):
         print('Running for {}s, killing: {}'.format(metazoo.register['time'], metazoo.register['kills']), flush=True)
         print('''
 Attentiation! In this experiment, we periodically kill and reboot servers.
-Some exceptions will appear in your terminal. Do not be alarmed of them.
+Some exceptions will appear in your terminal. Do not be alarmed.
 Here we give some of the occuring errors, which are due to killing and not important:
  1. "KeeperErrorCode = ConnectionLoss for /ClientNode"
  2. "[Thread-18:QuorumCnxManager$SendWorker@559] - Failed to send last message.
      Shutting down thread. java.nio.channels.ClosedChannelException"
- 3. "[LearnerHandler-/10.149.0.27:58498:LearnerHandler@444] - Unexpected exception causing shutdown while sock still open"
+ 3. "[LearnerHandler-/10.149.0.27:58498:LearnerHandler@444] - Unexpected exception
+     causing shutdown while sock still open"
 
+Attention! Due to the large amount of clients constantly reading and writing data,
+snapshots and logs grow quickly to terrabyte-scale. Due to storage quota,
+we periodically remove old logs and snapshots.
 Happy experimenting!
 ''')
 
@@ -78,23 +83,22 @@ Happy experimenting!
         kills = metazoo.register['kills']
         time.sleep(2*nap_time)
 
-        clean_timer = None
-
+        active = True
         def clean():
-            print('Cleaning data dir')
-            metazoo.clean_func()
-            clean_timer = threading.Timer(30, clean) # Clean every 30 seconds
-            clean_timer.start()
+            if active:
+                print('Cleaning data dir', flush=True)
+                metazoo.clean_func()
+                threading.Timer(30, clean).start() # Clean old data every 30 seconds
 
-        clean_timer = threading.Timer(10, clean) # Initially, wait 10 second to clean
-        clean_timer.start()
+        threading.Timer(10, clean).start() # Initially, wait 10 second to clean
+
         for kill in kills:
             if kill == metazoo.gid:
                metazoo.executor.reboot()
             time.sleep(nap_time)
         time.sleep(nap_time)
 
-        clean_timer.cancel()
+        active = False # Should close cleaning timer within 30 seconds
 
     def post_experiment(self, metazoo):
         print('Experiments are done')

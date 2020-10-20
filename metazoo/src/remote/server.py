@@ -121,7 +121,7 @@ def clean_data(config):
     classpath = '{}:{}'.format(prefix, classpath)
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.PurgeTxnLog'
 
-    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" -cp "{}" {} "{}" "{}" "{}"'.format(
+    command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" -cp "{}" {} "{}" "{}" "{}" > /dev/null 2>&1'.format(
         config.log4j_dir,
         config.log4j_properties,
         classpath, 
