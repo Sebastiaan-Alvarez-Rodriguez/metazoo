@@ -1,5 +1,5 @@
-# Code in this file is executed on each server.
-# The goal is to boot a zookeeper server, and make sure it knows of the other ones
+# Code in this file is to boot, stop and maintain zookeeper servers
+# A zookeeper server mainly needs a crawlspace, a config, a myid file, and a cleaner
 
 import os
 
@@ -17,6 +17,7 @@ def populate_config(config, debug_mode):
     config.log4j_dir = loc.get_server_cfg_dir()
     config.log4j_properties = 'INFO, CONSOLE' if debug_mode else 'ERROR, CONSOLE'
 
+# Generates a connectionlist, which client nodes read to decide which host to connect to 
 def gen_connectionlist(config, experiment):
     # End goal:
     # <node101>:<clientport1>
@@ -81,6 +82,7 @@ clientPort={4}
         file.write(config_string)
 
 
+# Boot zookeeper servers
 def boot(config):
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
     prefix = ':'.join([
@@ -109,6 +111,8 @@ def boot(config):
 
     return executor
 
+
+# Clean old snapshots and logs from zookeeper while it is running 
 def clean_data(config):
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
     prefix = ':'.join([
@@ -130,9 +134,6 @@ def clean_data(config):
         '-n',
         '4')
     os.system(command)
-    # executor = Executor(command)
-    # executor.run(shell=True)
-    
 
 # Stops Zookeeper instance
 def stop(executor):

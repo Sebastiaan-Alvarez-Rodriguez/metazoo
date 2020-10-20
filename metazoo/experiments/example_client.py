@@ -2,7 +2,7 @@ from experiments.interface import ExperimentInterface
 import remote.server as srv
 import util.fs as fs
 import util.location as loc
-
+from util.repeater import Repeater
 import threading
 import time
 import os
@@ -83,22 +83,18 @@ Happy experimenting!
         kills = metazoo.register['kills']
         time.sleep(2*nap_time)
 
-        active = True
-        def clean():
-            if active:
-                print('Cleaning data dir', flush=True)
-                metazoo.clean_func()
-                threading.Timer(30, clean).start() # Clean old data every 30 seconds
-
-        threading.Timer(10, clean).start() # Initially, wait 10 second to clean
-
+        clean_repeater = Repeater(metazoo.clean_func, 20) # Clean data directory every 20 seconds
+        clean_repeater.start()        
+        
         for kill in kills:
             if kill == metazoo.gid:
                metazoo.executor.reboot()
             time.sleep(nap_time)
         time.sleep(nap_time)
 
-        active = False # Should close cleaning timer within 30 seconds
+        clean_repeater.stop() # Stop cleaning when we are done
+
+
 
     def post_experiment(self, metazoo):
         print('Experiments are done')
