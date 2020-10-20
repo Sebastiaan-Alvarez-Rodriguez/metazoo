@@ -20,7 +20,7 @@ def killthroughput(logdir, large, no_show, store_fig, filetype):
     nap_time = 300 / (nr_kills+1)
 
     killpoints = [(1+x)*nap_time for x in range(nr_kills)]
-    ax.scatter(killpoints, [frame[int(x)] for x in killpoints], color='tab:green', marker='o')
+    ax.scatter(killpoints, [frame[int(x*(1.0/0.3))] for x in killpoints], color='tab:red', marker='o', s=400)
 
     ax.set(xlabel='time (s)', ylabel='ops per 300ms', title='Throughput initial experiment')
     ax.grid()

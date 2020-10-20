@@ -1,7 +1,9 @@
 #!/usr/bin/python
 import argparse
+import datetime
 import os
 import sys
+import time
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
 import dynamic.experiment as exp
@@ -14,6 +16,7 @@ import supplier.java as jv
 from util.executor import Executor
 import util.location as loc
 import util.fs as fs
+import util.ui as ui
 
 def is_compiled():
     return fs.isfile(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
@@ -76,7 +79,7 @@ def _exec_internal_server(debug_mode=False):
     return rmt.run_server(debug_mode)
 
 
-def exec(force_comp=False, debug_mode=False):
+def exec(repeats, force_comp=False, debug_mode=False):
     print('Connected!', flush=True)
     if not fs.isdir(loc.get_remote_metazoo_dir()):
         print('[FAILURE] Missing project on remote. Did you run "{} --init"?'.format(sys.argv[0]))
@@ -87,6 +90,20 @@ def exec(force_comp=False, debug_mode=False):
             return False
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
+
+    # Obtain a timestamp for this experiment, and construct needed directories
+    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')
+    print('Timestamped experiment, designation {}'.format(timestamp))
+    if fs.isdir(loc.get_metazoo_results_dir(), timestamp):
+        if ui.ask_bool('Results already contain timestamp {}. Override (Y) or wait (n)?'):
+            fs.rm(loc.get_metazoo_results_dir(), timestamp)
+        else:
+            while datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S') == timestamp:
+                time.sleep(1)
+            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')
+            print('New timestamp assigned: {}'.format(timestamp))
+    fs.mkdir(loc.get_metazoo_results_dir(), timestamp, str(x)) for x in range(repeats)
+
 
     print('Loading experiment...', flush=True)
     experiment = exp.get_experiment()
@@ -177,12 +194,13 @@ def init():
         print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
 
-def remote(force_exp=False, force_comp=False, debug_mode=False):
+def remote(repeats, force_exp=False, force_comp=False, debug_mode=False):
     if force_exp and not export(full_exp=True):
         print('[FAILURE] Could not export data')
         return False
 
-    program = '--exec'+(' -c' if force_comp else '')+(' -d' if debug_mode else '')
+    program = '--exec {}'.format(repeats)
+    program +=(' -c' if force_comp else '')+(' -d' if debug_mode else '')
 
 
     command = 'ssh {0} "python3 {1}/metazoo/main.py {2}"'.format(
@@ -207,11 +225,11 @@ def main():
     group.add_argument('--compile', help='compile ancient', action='store_true')
     group.add_argument('--exec_internal_client', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--exec_internal_server', help=argparse.SUPPRESS, action='store_true')
-    group.add_argument('--exec', help='call this on the DAS5 to handle server orchestration', action='store_true')
+    group.add_argument('--exec', nargs=1, metavar='repeats', help='call this on the DAS5 to handle server orchestration')
     group.add_argument('--export', help='export only metazoo and script code to the DAS5', action='store_true')
     group.add_argument('--init_internal', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--init', help='Initialize MetaZoo to run code on the DAS5', action='store_true')
-    group.add_argument('--remote', help='execute code on the DAS5 from your local machine', action='store_true')
+    group.add_argument('--remote', nargs=1, metavar='repeats', help='execute code on the DAS5 from your local machine')
     # group.add_argument('--results', nargs='+', help='Process results on local machine')
     group.add_argument('--settings', help='Change settings', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
@@ -232,7 +250,7 @@ def main():
     elif args.exec_internal_server:
         _exec_internal_server(args.debug_mode)
     elif args.exec:
-        exec(force_comp=args.force_comp, debug_mode=args.debug_mode)
+        exec(int(args.exec[0]), force_comp=args.force_comp, debug_mode=args.debug_mode)
     elif args.export:
         export(full_exp=True)
     elif args.init_internal:
@@ -240,7 +258,7 @@ def main():
     elif args.init:
         init()
     elif args.remote:
-        remote(force_exp=args.force_exp, force_comp=args.force_comp, debug_mode=args.debug_mode)
+        remote(int(args.remote[0]), force_exp=args.force_exp, force_comp=args.force_comp, debug_mode=args.debug_mode)
     elif args.settings:
         settings()
 

@@ -3,6 +3,9 @@ import sys
 
 import result.killthroughput.gen as kgen
 import result.util.storer as storer
+import util.location as loc
+import util.fs as fs
+
 
 def subparser(registrar):
     resultparser = registrar.add_parser('results', help='Build all kinds of graphs (use results -h to see more...)')
@@ -24,6 +27,8 @@ def results(parser, args):
         parser.error('--type only supports filetypes: '+', '.join(storer.supported_filetypes()))
         return
 
+    if not fs.isdir(loc.get_metazoo_results_dir()):
+        print('[FAILURE] You have no experiment results directory "{}". Run experiments to get some data first.'.format(log.get_metazoo_results_dir()))
     fargs = [args.large, args.no_show, args.store, args.type]
     if args.killthroughput:
         kgen.killthroughput(args.killthroughput[0], *fargs)
