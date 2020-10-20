@@ -1,14 +1,12 @@
 #!/usr/bin/python
 import argparse
-import datetime
 import os
 import sys
-import time
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
-import dynamic.experiment as exp
+import orchestration.exec as exec_hooks 
+from orchestration.orchestrator import instance as orch
 import remote.remote as rmt
-import remote.client as cli
 import result.results as res
 from settings.settings import settings_instance as st
 import supplier.ant as ant
@@ -91,50 +89,25 @@ def exec(repeats, force_comp=False, debug_mode=False):
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
 
-    # Obtain a timestamp for this experiment, and construct needed directories
-    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')
-    print('Timestamped experiment, designation {}'.format(timestamp))
-    if fs.isdir(loc.get_metazoo_results_dir(), timestamp):
-        if ui.ask_bool('Results already contain timestamp {}. Override (Y) or wait (n)?'):
-            fs.rm(loc.get_metazoo_results_dir(), timestamp)
-        else:
-            while datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S') == timestamp:
-                time.sleep(1)
-            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')
-            print('New timestamp assigned: {}'.format(timestamp))
-    fs.mkdir(loc.get_metazoo_results_dir(), timestamp, str(x)) for x in range(repeats)
+    orch.add_hook('pre_experiment', exec_hooks.timestamp_hook)
+    orch.add_hook('pre_experiment', exec_hooks.crawlspace_hook)
+    orch.add_hook('pre_experiment', exec_hooks.load_experiment_hook)
+    orch.add_hook('pre_experiment', exec_hooks.pre_experiment_hook)
 
+    orch.add_hook('post_experiment', exec_hooks.post_experiment_hook)
+    orch.add_hook('post_experiment', exec_hooks.crawlspace_hook)
 
-    print('Loading experiment...', flush=True)
-    experiment = exp.get_experiment()
-    num_nodes_total = experiment.num_servers + experiment.num_clients
-
-    # TODO: separate client better from src
-    cli.prepare_classpath_symlinks()
-
-    aff_server = experiment.servers_core_affinity
-    nodes_server = experiment.num_servers // aff_server
-    command_server = 'prun -np {} -{} python3 {} --exec_internal_server {}'.format(nodes_server, aff_server, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
-    aff_client = experiment.clients_core_affinity
-    nodes_client = experiment.num_clients // aff_client
-    command_client = 'prun -np {} -{} python3 {} --exec_internal_client {}'.format(nodes_client, aff_client, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
+    orch.execute('pre_experiment')
     
-    fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
-    fs.mkdir(loc.get_remote_crawlspace_dir())
+    print('Booting network...', flush=True)
 
-    experiment.pre_experiment()
-    print('Booting server network...', flush=True)
-    
-    print('Booting client network...', flush=True)
-    
-    server_exec = Executor(command_server)
-    client_exec = Executor(command_client)
+    server_exec = Executor(reg['command_server'])
+    client_exec = Executor(reg['command_client'])
 
     Executor.run_all(server_exec, client_exec, shell=True)
     status = Executor.wait_all(server_exec, client_exec)
 
-    experiment.post_experiment()
-    experiment.clean()
+    orch.execute('post_experiment')
     if status:
         print('[SUCCESS] Experiment complete!')
     else:

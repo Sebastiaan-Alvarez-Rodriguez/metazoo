@@ -1,17 +1,18 @@
+import os
+import random
+import threading
+import time
+
 from experiments.interface import ExperimentInterface
-import remote.server as srv
+import remote.client as cli
 import util.fs as fs
 import util.location as loc
 from util.repeater import Repeater
-import threading
-import time
-import os
-import random
 
 class ExampleExperiment(ExperimentInterface):
     '''
     A most useful experiment.
-    Check <root dir>/metazoo/experiments/example_simple/example.py 
+    Check <root dir>/metazoo/experiments/examples/example_simple.py 
     for an example implementation.
     Also, check <root dir>/metazoo/dynamic/metazoo.py
     to find out how metazoo variables work.
@@ -48,6 +49,7 @@ class ExampleExperiment(ExperimentInterface):
 # 250 /            25 = 10
 
     def pre_experiment(self, metazoo):
+        cli.prepare_classpath_symlinks()
         '''Execution before experiment starts. Executed on the remote once.'''
         metazoo.register['time'] = 300
         nr_kills = 7

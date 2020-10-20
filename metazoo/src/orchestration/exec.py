@@ -6,7 +6,6 @@ from orchestration.registrar import instance as reg
 import util.location as loc
 
 # Hook to generate a timestamp for this experiment.
-# Should be performed in pre_experiment
 def timestamp_hook():
     # Obtain a timestamp for this experiment, and construct needed directories
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')
@@ -29,6 +28,7 @@ def crawlspace_hook():
     fs.mkdir(loc.get_remote_crawlspace_dir())
 
 # Hook to load experiment and propagation commands
+# Should be performed in pre_experiment
 def load_experiment_hook():
     print('Loading experiment...', flush=True)
     experiment = exp.get_experiment()
