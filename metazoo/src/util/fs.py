@@ -55,18 +55,19 @@ def ln(pointedloc, pointerloc, is_dir=None):
     os.symlink(pointedloc, pointerloc, target_is_directory=isdir(pointedloc) if is_dir == None else is_dir)
 
 def ls(directory, only_files=False, only_dirs=False, full_paths=False, *args):
+    ddir = join(directory, *args)
     if only_files and only_dirs:
         raise ValueError('Cannot ls only files and only directories')
 
     if sys.version_info >= (3, 5): # Use faster implementation in python 3.5 and above
-        with os.scandir(directory) as it:
+        with os.scandir(ddir) as it:
             for entry in it:
                 if (entry.is_dir() and not only_files) or (entry.is_file() and not only_dirs):
-                    yield join(directory, entry.name) if full_paths else entry.name
+                    yield join(ddir, entry.name) if full_paths else entry.name
     else: # Use significantly slower implementation available in python 3.4 and below
-        for entry in os.listdir(directory):
-            if (isdir(directory, entry) and not only_files) or (isfile(directory, entry) and not only_dirs):
-                yield join(directory, entry) if full_paths else entry
+        for entry in os.listdir(ddir):
+            if (isdir(ddir, entry) and not only_files) or (isfile(ddir, entry) and not only_dirs):
+                yield join(ddir, entry) if full_paths else entry
 
 def mkdir(path, *args, exist_ok=False):
     os.makedirs(join(path, *args), exist_ok=exist_ok)
@@ -95,8 +96,15 @@ def sep():
 def sizeof(directory, *args):
     path = join(directory, *args)
     if not isfile(path):
-        raise RuntimeError('Error: "{0}" is no path to a file'.format(path))
+        raise RuntimeError('Error: "{}" is no path to a file'.format(path))
     return os.path.getsize(path)
 
 def split(path):
     return path.split(os.sep)
+
+# Touch-like command, does not emulate mtime if file already exists
+def touch(path, *args):
+    path = join(path, *args)
+    if exists(path):
+        raise RuntimeError('Error: "{}" already exists'.format(path))
+    open(path, 'w').close()

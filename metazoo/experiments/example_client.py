@@ -7,7 +7,6 @@ from experiments.interface import ExperimentInterface
 import remote.client as cli
 import util.fs as fs
 import util.location as loc
-from util.repeater import Repeater
 
 class ExampleExperiment(ExperimentInterface):
     '''
@@ -19,11 +18,11 @@ class ExampleExperiment(ExperimentInterface):
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
-        return 5
+        return 3
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
-        return 256
+        return 4
 
     def servers_use_infiniband(self):
         '''True if servers must communicate with eachother over infiniband, False otherwise'''
@@ -39,7 +38,7 @@ class ExampleExperiment(ExperimentInterface):
 
     def clients_core_affinity(self):
         '''Amount of client processes which may be mapped on the same physical node'''
-        return 8
+        return 2
 # prc / prcs per core = allocation
 # 256 /             8 = 32
 # 250 /            10 = 25
@@ -48,11 +47,16 @@ class ExampleExperiment(ExperimentInterface):
 # 256 /            16 = 16
 # 250 /            25 = 10
 
+    def server_periodic_clean(self):
+        '''Period in seconds for servers to clean their crawlspaces. 0 means no cleaning'''
+        return 10
+
+
     def pre_experiment(self, metazoo):
         cli.prepare_classpath_symlinks()
         '''Execution before experiment starts. Executed on the remote once.'''
-        metazoo.register['time'] = 300
-        nr_kills = 7
+        metazoo.register['time'] = 30
+        nr_kills = 2
         metazoo.register['nr_kills'] = nr_kills
         metazoo.register['kills'] = [random.randint(0, self.num_servers()-1) for x in range(nr_kills)]
         print('Running for {}s, killing: {}'.format(metazoo.register['time'], metazoo.register['kills']), flush=True)
@@ -77,7 +81,7 @@ Happy experimenting!
         sleep_time = metazoo.register['time']
         time.sleep(sleep_time) #Client remains active for a while
         metazoo.executor.stop()
-        
+
 
     def experiment_server(self, metazoo):
         '''Execution occuring on ALL server nodes'''
@@ -85,17 +89,10 @@ Happy experimenting!
         kills = metazoo.register['kills']
         time.sleep(nap_time)
 
-        clean_repeater = Repeater(metazoo.clean_func, 20) # Clean data directory every 20 seconds
-        clean_repeater.start()        
-        
         for kill in kills:
             if kill == metazoo.gid:
                metazoo.executor.reboot()
             time.sleep(nap_time)
-        time.sleep(nap_time)
-
-        clean_repeater.stop() # Stop cleaning when we are done
-
 
 
     def post_experiment(self, metazoo):

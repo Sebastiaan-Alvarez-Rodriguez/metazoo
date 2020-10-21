@@ -20,10 +20,12 @@ class ExperimentInterface(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'clients_use_infiniband') and callable(subclass.clients_use_infiniband) and 
                 hasattr(subclass, 'servers_core_affinity') and callable(subclass.servers_core_affinity) and 
                 hasattr(subclass, 'clients_core_affinity') and callable(subclass.clients_core_affinity) and 
+                hasattr(subclass, 'server_periodic_clean') and callable(subclass.server_periodic_clean) and
                 hasattr(subclass, 'pre_experiment') and callable(subclass.pre_experiment) and 
                 hasattr(subclass, 'experiment_client') and callable(subclass.experiment_client) and 
                 hasattr(subclass, 'experiment_server') and callable(subclass.experiment_server) and 
                 hasattr(subclass, 'post_experiment') and callable(subclass.post_experiment) or NotImplemented)
+
 
     @abc.abstractmethod
     def num_servers(self):
@@ -55,6 +57,10 @@ class ExperimentInterface(metaclass=abc.ABCMeta):
         '''Amount of client processes which may be mapped on the same physical node'''
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def server_periodic_clean(self):
+        '''Period in seconds for servers to clean their crawlspaces. 0 means no cleaning'''
+        raise NotImplementedError
 
     @abc.abstractmethod
     def pre_experiment(self, metazoo):

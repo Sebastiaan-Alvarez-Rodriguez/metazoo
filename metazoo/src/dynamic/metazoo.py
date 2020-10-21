@@ -5,13 +5,48 @@ import util.location as loc
 
 
 class MetaZoo(object):
+    '''
+    Dynamic store for experiment. Store persists between remote and nodes.
+    Note: After nodes have booted, store becomes immutable.
+
+    Members with global availability:
+        register: key-value store for user-defined objects. Make sure this objects are pickleable
+        repeats: Number of repeats for this experiment
+    
+    Members with remote availability:
+        -
+
+    Members with global node availability:
+        executor: Exector for the server/client. Will be delivered in started state. Can be stopped and rebooted
+        gid: Global ID. Unique for instances in the same group
+        lid: Local ID. Unique for instances in the same group, on the same node 
+        repeat: Current repetition of experiment
+
+    Members with server node availability:
+        -
+
+    Members with client node availability:
+        hosts: A tuple of strings resembling '<ip_or_hostname>:<port>'
+    '''
     def __init__(self):
-        self.register = dict()
-        self.log = None
-        self.host = None
+        self._register = dict()
+        self._executor = None
+        self._hosts = None
         self._gid = None
         self._lid = None
-        self.clean_func = None
+        self._repeats = None
+        self._repeat = None
+
+    @property
+    def executor(self):
+        return self._executor
+    
+    @property
+    def hosts(self):
+        return self._hosts
+    @hosts.setter
+    def set_hosts(self):
+        raise RuntimeError('You cannot set hosts yourself!')
 
     @property
     def gid(self):
@@ -19,13 +54,31 @@ class MetaZoo(object):
     @gid.setter
     def set_gid(self):
         raise RuntimeError('You cannot set the gid yourself!')
-    
+
     @property
     def lid(self):
         return self._lid
     @lid.setter
     def set_lid(self):
         raise RuntimeError('You cannot set the lid yourself!')
+
+    @property
+    def register(self):
+        return self._register
+    
+    @property
+    def repeats(self):
+        return self._repeats
+    @repeats.setter
+    def set_repeats(self):
+        raise RuntimeError('You cannot set repeats number yourself!')
+
+    @property
+    def repeat(self):
+        return self._repeat
+    @repeat.setter
+    def set_repeat(self):
+        raise RuntimeError('You cannot set repeat number yourself!')
 
 
     # Function to completely prohibit changing (i.e. writing, updating, deleting) MetaZoo register

@@ -1,6 +1,14 @@
 import sys
 import importlib
 
+# Check if a given library exists
+def library_exists(name):
+    if sys.version_info >= (3.4):
+        return importlib.util.find_spec(str(name)) is not None
+    else:
+        raise NotImplementedError('Did not implement existence check for Python 3.3 and below')
+
+# Import a library from a filesystem full path (i.e. starting from root)
 def import_full_path(full_path):
     if sys.version_info >= (3, 5):
         import importlib.util

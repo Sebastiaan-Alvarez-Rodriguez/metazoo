@@ -2,7 +2,7 @@ import abc
 import os
 import socket
 
-import remote.identifier as idr
+import remote.util.identifier as idr
 
 
 # Constructs a client config, populates it, and returns it

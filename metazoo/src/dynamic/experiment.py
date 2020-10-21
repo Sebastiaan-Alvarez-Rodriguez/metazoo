@@ -8,7 +8,8 @@ import util.location as loc
 import util.ui as ui
 
 class Experiment(object):
-    def __init__(self, location, modulename, clazz):
+    def __init__(self, timestamp, location, modulename, clazz):
+        self.timestamp = timestamp
         self.location = location
         self.modulename = modulename
         self.instance = clazz()
@@ -19,6 +20,8 @@ class Experiment(object):
         self._clients_use_infiniband = None
         self._servers_core_affinity = None
         self._clients_core_affinity = None
+
+        self._server_periodic_clean = None
 
     @property
     def num_servers(self):
@@ -68,33 +71,41 @@ class Experiment(object):
                 raise RuntimeError('Number of clients must be divisible by client core affinity. {} % {} = {} != 0'.format(self.num_clients, sef._clients_core_affinity, (self.num_clients % self._clients_core_affinity)))
         return self._clients_core_affinity
 
+    @property
+    def server_periodic_clean(self):
+        if self._server_periodic_clean == None:
+            self._server_periodic_clean = int(self.instance.server_periodic_clean())
+            if self._server_periodic_clean < 0:
+                raise RuntimeError('Server periodic clean designation must be either 0 (never clean) or an integer representing time (s)')
+        return self._server_periodic_clean
+    
 
     @property
     def metazoo(self):
         return self._metazoo
 
 
-    def pre_experiment(self):
+    def pre_experiment(self, repeats):
+        self._metazoo._repeats = repeats
         val = self.instance.pre_experiment(self._metazoo)
         self.persist()
         return val
 
 
-    def experiment_client(self, config, executor):
-        self._metazoo = MetaZoo.load() # Inside client node, must load persisted state
+    def experiment_client(self, config, executor, repeat):
         self._metazoo._gid = config.gid
         self._metazoo._lid = config.lid
-        self._metazoo.hosts = config.hosts
-        self._metazoo.executor = executor
+        self._metazoo._hosts = tuple(config.hosts)
+        self._metazoo._executor = executor
+        self._metazoo._repeat = repeat
         return self.instance.experiment_client(self._metazoo)
 
     
-    def experiment_server(self, config, executor, clean_func):
-        self._metazoo = MetaZoo.load() # Inside server node, must load persisted state
+    def experiment_server(self, config, executor, repeat):
         self._metazoo._gid = config.gid
         self._metazoo._lid = config.lid
-        self._metazoo.executor = executor
-        self._metazoo.clean_func = clean_func
+        self._metazoo._executor = executor
+        self._metazoo._repeat = repeat
         return self.instance.experiment_server(self._metazoo)
 
 
@@ -108,27 +119,28 @@ class Experiment(object):
         self._metazoo.persist()
         fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), ignore_errors=True)
         with open(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), 'w') as file:
-            file.write('{}|{}'.format(self.location, self.modulename))
+            file.write('{}|{}|{}'.format(self.timestamp, self.location, self.modulename))
 
     # Construct object from persisted information
     @staticmethod
     def load():
         with open(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), 'r') as file:
-            location, modulename = file.read().split('|')
-            return get_experiment(location=location, modulename=modulename)
+            timestamp, location, modulename = file.read().split('|')
+            exp = get_experiment(timestamp, location=location, modulename=modulename)
+            exp._metazoo = MetaZoo.load()
+            return exp
 
     # Cleans persisted information
-    @staticmethod
-    def clean():
+    def clean(self):
         fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), ignore_errors=True)
-
+        self._metazoo.clean()
 
 # Standalone function to get an experiment instance
-def get_experiment(location=None, modulename=None):
+def get_experiment(timestamp, location=None, modulename=None):
     if location and modulename:
         for name, obj in inspect.getmembers(imp.import_full_path(location)):
             if name == modulename and inspect.isclass(obj) and issubclass(obj, ExperimentInterface):
-                return Experiment(location, modulename, obj)
+                return Experiment(timestamp, location, modulename, obj)
         raise RuntimeError('Could not fetch module "{}" in file {}'.format(modulename, location))
 
     candidates = []
@@ -150,8 +162,7 @@ def get_experiment(location=None, modulename=None):
     if len(candidates) == 0:
         raise RuntimeError('Could not find a subclass of "ExperimentInterface" in directory {}. Make a ".py" file there, with a class extending "ExperimentInterface". See the example implementation for more details.'.format(loc.get_metazoo_experiment_dir()))
     elif len(candidates) == 1:
-        return Experiment((candidates[0])[0], (candidates[0])[1], (candidates[0])[2])
+        return Experiment(timestamp, (candidates[0])[0], (candidates[0])[1], (candidates[0])[2])
     else:
-        # TODO: If not pretty, can also get class name using obj.__name__
         idx = ui.ask_pick('Multiple suitable experiments found. Please pick an experiment:', [x[0] for x in candidates])
-        return Experiment((candidates[idx])[0], (candidates[idx])[1], (candidates[idx])[2])
+        return Experiment(timestamp, (candidates[idx])[0], (candidates[idx])[1], (candidates[idx])[2])

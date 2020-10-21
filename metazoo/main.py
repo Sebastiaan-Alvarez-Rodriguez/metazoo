@@ -4,8 +4,7 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
-import orchestration.exec as exec_hooks 
-from orchestration.orchestrator import instance as orch
+import dynamic.experiment as exp
 import remote.remote as rmt
 import result.results as res
 from settings.settings import settings_instance as st
@@ -14,6 +13,7 @@ import supplier.java as jv
 from util.executor import Executor
 import util.location as loc
 import util.fs as fs
+import util.time as tm
 import util.ui as ui
 
 def is_compiled():
@@ -89,25 +89,43 @@ def exec(repeats, force_comp=False, debug_mode=False):
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
 
-    orch.add_hook('pre_experiment', exec_hooks.timestamp_hook)
-    orch.add_hook('pre_experiment', exec_hooks.crawlspace_hook)
-    orch.add_hook('pre_experiment', exec_hooks.load_experiment_hook)
-    orch.add_hook('pre_experiment', exec_hooks.pre_experiment_hook)
+    time_to_reserve = ui.ask_time('How much time to reserve on the cluster for {} repeats?'.format(repeats))
 
-    orch.add_hook('post_experiment', exec_hooks.post_experiment_hook)
-    orch.add_hook('post_experiment', exec_hooks.crawlspace_hook)
+    timestamp = tm.timestamp()
+    # Constructs result directories
+    for x in range(repeats):
+        fs.mkdir(loc.get_metazoo_results_dir(), timestamp, str(x)) 
 
-    orch.execute('pre_experiment')
-    
+    print('Loading experiment...', flush=True)
+    experiment = exp.get_experiment(timestamp)
+
+    experiment.pre_experiment(repeats)
+
+    # Remove stale dirs from previous runs
+    fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
+    fs.mkdir(loc.get_remote_crawlspace_dir())
+    fs.rm(loc.get_metazoo_sync_dir(), ignore_errors=True)
+    fs.mkdir(loc.get_metazoo_sync_dir())
+        
+
+    # Build commands to boot the experiment
+    aff_server = experiment.servers_core_affinity
+    nodes_server = experiment.num_servers // aff_server
+    command_server = 'prun -np {} -{} -t {} python3 {} --exec_internal_server {}'.format(nodes_server, aff_server, time_to_reserve, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
+    aff_client = experiment.clients_core_affinity
+    nodes_client = experiment.num_clients // aff_client
+    command_client = 'prun -np {} -{} -t {} python3 {} --exec_internal_client {}'.format(nodes_client, aff_client, time_to_reserve, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
+
     print('Booting network...', flush=True)
-
-    server_exec = Executor(reg['command_server'])
-    client_exec = Executor(reg['command_client'])
+    server_exec = Executor(command_server)
+    client_exec = Executor(command_client)
 
     Executor.run_all(server_exec, client_exec, shell=True)
     status = Executor.wait_all(server_exec, client_exec)
 
-    orch.execute('post_experiment')
+    experiment.post_experiment()
+    experiment.clean()
+
     if status:
         print('[SUCCESS] Experiment complete!')
     else:

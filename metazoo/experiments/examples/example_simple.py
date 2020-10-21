@@ -33,10 +33,16 @@ class ExampleExperiment(ExperimentInterface):
         '''Amount of client processes which may be mapped on the same physical node'''
         return 1
 
+    def server_periodic_clean(self);
+        '''Period in seconds for servers to clean their crawlspaces. 0 means no cleaning'''
+        return 0
+
 
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
         print('Hi there! I am executed before the experiment starts!')
+        print('According to my data, we will host')
+
         metazoo.register['a_key'] = 'Hello World'
         metazoo.register['secret'] = 42
         if metazoo.gid == None and metazoo.lid == None:
@@ -44,7 +50,7 @@ class ExampleExperiment(ExperimentInterface):
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
-        print('Hello from client with gid={}.'.format(metazoo.gid))
+        print('Hello from client with gid={}. I am told these hosts exist: {}'.format(metazoo.gid, metazoo.hosts))
         time.sleep(5)
         print('I (client {}:{})) slept well. Pre-experiment says "{}" with secret code {}. Goodbye!'.format(
             metazoo.gid,

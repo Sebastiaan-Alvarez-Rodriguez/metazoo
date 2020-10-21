@@ -7,12 +7,14 @@ def num_nodes():
 
 # Gives max number of processes per node (e.g. returns 2 if we have 2 servers and 1 client)
 # Note: Should return 1 if we have 1 server and 2 clients
-# def num_procs_per_node():
-#     return ceil(int(os.environ['SLURM_NPROCS']) / num_nodes())
 def num_procs_per_node():
     return int(os.environ['SLURM_NPROCS']) // num_nodes()
 
 
+# During identification, we make the following dangerous assumption:
+# 'prun cpu_ranks are distributed in increasing order on sorted node numbers'
+# In practice, we assume the lowest cpu rank is on the lowest node and highest rank on highest node
+# By first checking if this dangerous assumption holds, we prevent coordinational disasters
 def __sanity_check(rank):
     host = socket.gethostname()
     # node117   node117   node118   node118   node119   node119
@@ -56,10 +58,3 @@ def identifier_local():
     # 1
     local_rank = rank - expected_rank_min
     return local_rank
-'''
-End goal:
-server.0=<ip1>:2182:2183 #share node1
-server.1=<ip1>:2184:2185 #share node1
-server.2=<ip2>:2182:2183 #share node2
-server.3=<ip2>:2184:2185 #share node2
-''' 

@@ -3,7 +3,7 @@ __pycache__/
 !deps/example_client/
 
 /metazoo.cfg
-/logs/
+/.sync/
 /results/
 /graphs/
 *.jar

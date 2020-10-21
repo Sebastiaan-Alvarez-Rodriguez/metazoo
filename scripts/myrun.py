@@ -6,8 +6,9 @@ def main(argv):
     coreaffinity = -1
     maxnrnodes = 24
     minnrnodes = -1
+    time = ''
     try:
-        opts, args = getopt.getopt(argv, 'hn:c:')
+        opts, args = getopt.getopt(argv, 'hn:c:t:')
     except getopt.GetoptError:
         print('myrun.py -n <number of nodes>')
         sys.exit(2)
@@ -24,6 +25,8 @@ def main(argv):
             if coreaffinity < 1 or coreaffinity > 8:
                 print('Only can set core affinity to 1, 2, or 4')
                 coreaffinity = -1
+        elif opt in ('-t'):
+            time = arg
 
     while nrnodes == -1: 
         print('How many nodes do you want to allocate?')
@@ -42,7 +45,12 @@ def main(argv):
                 print('Only can set core affinity to 1, 2, or 4')
                 coreaffinity = -1
 
-    command = 'prun -np {} -{} python3 test.py'.format(nrnodes, coreaffinity)
+    while time == '':
+        time = input('Set runtime [[hh:]mm:]ss ')
+        if len(time) == 0:
+            print('Cannot set empty runtime')
+
+    command = 'prun -np {} -{} -t {} python3 test.py'.format(nrnodes, coreaffinity, time)
     os.system(command)
 
 

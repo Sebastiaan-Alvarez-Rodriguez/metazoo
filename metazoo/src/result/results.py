@@ -1,8 +1,6 @@
 import argparse
 import sys
 
-import result.killthroughput.gen as kgen
-import result.util.storer as storer
 import util.location as loc
 import util.fs as fs
 
@@ -20,9 +18,14 @@ def result_args_set(args):
     return hasattr(args, 'killthroughput')
 
 def results(parser, args):
+    if not importer.library_exists('matplotlib'):
+        print('Cannot work with results. Matplotlib is not available!')
+        return
+
     if args.store and args.type is None:
         parser.error('--store (-st) requires --type (-t)')
         return
+    import result.util.storer as storer
     if args.store and not storer.filetype_is_supported(args.type):
         parser.error('--type only supports filetypes: '+', '.join(storer.supported_filetypes()))
         return
@@ -31,4 +34,5 @@ def results(parser, args):
         print('[FAILURE] You have no experiment results directory "{}". Run experiments to get some data first.'.format(log.get_metazoo_results_dir()))
     fargs = [args.large, args.no_show, args.store, args.type]
     if args.killthroughput:
+        import result.killthroughput.gen as kgen
         kgen.killthroughput(args.killthroughput[0], *fargs)

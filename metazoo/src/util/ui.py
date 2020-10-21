@@ -35,6 +35,29 @@ def ask_string(question, confirm=False, empty_ok=False):
         elif (confirm and ask_bool('Your choice: "{}". Are you absolutely sure this is correct?'.format(val))) or not confirm:
             return val
 
+# Ask user for a string resembling [[hh:]mm:]ss
+def ask_time(question):
+    while True:
+        val = ask_string(question+' [[hh:]mm:]ss ')
+        comps = val.split(':')
+        complen = len(comps)
+        if complen >= 3: #We have hours, minutes and seconds
+            if not comp[0].isnumeric():
+                print('Hours are not numeric. Try again.')
+                continue
+            del comps[0]
+        if complen >= 2: #We have minutes and seconds
+            if not comps[0].isnumeric():
+                print('Minutes are not numeric. Try again.')
+                continue
+            del comps[0]
+        if complen >= 1: #We have seconds
+            if comps[0].isnumeric():
+                return val
+            else:
+                print('Seconds are not numeric. Try again.')
+
+
 # Ask user to pick one of the displayed options.
 # Returns integer index of picked item
 def ask_pick(question, options: list):

@@ -6,7 +6,7 @@ import socket
 import time
 
 from remote.config import ServerConfig
-import remote.ip as ip
+import remote.util.ip as ip
 import util.fs as fs
 import util.location as loc
 from util.executor import Executor

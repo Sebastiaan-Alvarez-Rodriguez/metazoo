@@ -8,8 +8,8 @@ def get_metazoo_dep_dir():
 def get_metazoo_experiment_dir():
     return fs.join(fs.abspath(), 'experiments')
 
-def get_metazoo_log_dir():
-    return fs.join(fs.abspath(), 'logs')
+def get_metazoo_sync_dir():
+    return fs.join(fs.abspath(), '.sync')
 
 def get_metazoo_results_dir():
     return fs.join(fs.abspath(), 'results')

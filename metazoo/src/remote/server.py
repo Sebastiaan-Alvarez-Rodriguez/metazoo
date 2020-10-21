@@ -4,8 +4,8 @@
 import os
 
 from remote.config import ServerConfig
-import remote.identifier as idr
-import remote.ip as ip
+import remote.util.identifier as idr
+import remote.util.ip as ip
 from util.executor import Executor
 import util.fs as fs
 import util.location as loc
@@ -81,9 +81,15 @@ clientPort={4}
     with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.gid)), 'w') as file:
         file.write(config_string)
 
+# Writes the id of the server to the required 'myid' file in the crawlspace
+# According to the documentation, this is how we assign ourselves a server id
+def prepare_datadir(config):
+    fs.mkdir(config.datadir, exist_ok=True)
+    with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
+        file.write(str(config.gid))
 
 # Boot zookeeper servers
-def boot(config):
+def boot(config, local_log):
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
     prefix = ':'.join([
         loc.get_cfg_dir(),
@@ -96,17 +102,10 @@ def boot(config):
     zoo_main = '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false org.apache.zookeeper.server.quorum.QuorumPeerMain'
     conf_location = fs.join(loc.get_cfg_dir(), str(config.gid)+'.cfg')
 
-    fs.mkdir(config.datadir, exist_ok=True)
-    with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
-        file.write(str(config.gid))
-
-
-    local_log = 'server{}.log'.format(config.gid)
-
     command = 'java "-Dzookeeper.log.dir={}" "-Dprops={}" "-Dfile={}" -cp "{}" {} "{}"'.format(
     config.log4j_dir,
     config.log4j_properties,
-    fs.join(loc.get_node_log_dir(), local_log),
+    local_log,
     classpath, 
     zoo_main, 
     conf_location)
