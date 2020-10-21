@@ -22,7 +22,7 @@ def run_server(debug_mode):
         with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'w') as file:
             file.write('\n'.join(srv.gen_connectionlist(config, experiment)))
 
-    syncer = Syncer(config, experiment, 'server')
+    syncer = Syncer(config, experiment, 'server', debug_mode)
 
     # All servers must generate a config
     srv.gen_zookeeper_config(config)
@@ -61,12 +61,11 @@ def run_server(debug_mode):
         global_status &= status
 
         # Write server log to zookeeper/metazoo/results/<repeat>/
-        local_log = 'server{}.log'.format(config.gid)
         if fs.isfile(local_log):
             fs.mv(local_log, fs.join(loc.get_metazoo_results_dir(), timestamp, repeat, fs.basename(local_log)))
         
         if config.gid == 0:
-            print('Server iteration {}/{} complete'.format(repeat, repeats-1), flush=True)
+            print('Server iteration {}/{} complete'.format(repeat+1, repeats), flush=True)
         
         # We log failed executions in a results/<timestamp>/failures.metalog
         if not status:
@@ -102,7 +101,7 @@ def run_client(debug_mode):
     config = config_construct_client(experiment, hosts)
     cli.populate_config(config, debug_mode)
     
-    syncer = Syncer(config, experiment, 'client')
+    syncer = Syncer(config, experiment, 'client', debug_mode)
 
     global_status = True
     for repeat in range(repeats):
@@ -112,9 +111,10 @@ def run_client(debug_mode):
             fs.mkdir(loc.get_node_log_dir(), exist_ok=True)
 
         # Must wait and synchronise with all servers and clients
-        print('CLient {} stage PRE_SYNC'.format(tmper), flush=True)
+        
+        if debug_mode: print('Client {} stage PRE_SYNC'.format(tmper), flush=True)
         syncer.sync()
-        print('CLient {} stage POST_SYNC'.format(tmper), flush=True)
+        if debug_mode: print('Client {} stage POST_SYNC'.format(tmper), flush=True)
         
         executor = cli.boot(config)
         experiment.experiment_client(config, executor, repeat)

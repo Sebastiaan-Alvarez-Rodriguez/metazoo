@@ -7,9 +7,10 @@ import util.location as loc
 
 class Syncer(object):
     """docstring for Syncer"""
-    def __init__(self, config, experiment, designation):
+    def __init__(self, config, experiment, designation, debug_mode=False):
         self.gid = config.gid
         self.designation = designation
+        self.debug_mode = debug_mode
 
         self.prime = self.gid == 0 and self.designation == 'server'
         # Server 0 opens socket to listen
@@ -20,11 +21,11 @@ class Syncer(object):
             self.serversock.listen(1070) #Get up to 1070 connections before refusing them
             self.expected_connections = experiment.num_servers-1+experiment.num_clients
             self.connections = []
-            print('PRIME stage 0! Address in use: {}'.format(serveraddr), flush=True)
+            if self.debug_mode: print('PRIME stage 0! Address in use: {}'.format(serveraddr), flush=True)
             for x in range(self.expected_connections):
                 connection, address = self.serversock.accept()
                 self.connections.append(connection)
-            print('PRIME Got all {} connections'.format(self.expected_connections), flush=True)
+            if self.debug_mode: print('PRIME Got all {} connections'.format(self.expected_connections), flush=True)
         else: #Others open a socket to server 0
             time.sleep(5) #Give prime a head start
             if self.designation == 'client':
@@ -32,21 +33,21 @@ class Syncer(object):
             else:
                 addr = ('node{:03d}'.format(config.nodes[0]), 5000)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print('{}.{} CONNECTING TO addr: {}'.format(self.designation, self.gid, addr), flush=True)
+            if self.debug_mode: print('{}.{} CONNECTING TO addr: {}'.format(self.designation, self.gid, addr), flush=True)
             self.sock.connect(addr)
 
 
     def _handle_sync_prime(self):
-        print('SYNC stage 1!', flush=True)
+        if self.debug_mode: print('SYNC stage 1!', flush=True)
         for idx, conn in enumerate(self.connections):
             msg = conn.recv(2)
     
-        print('SYNC stage 2!', flush=True)
+        if self.debug_mode: print('SYNC stage 2!', flush=True)
         # When arriving here, all expected servers and clients are connected and waiting for a reply
         for conn in self.connections:
             conn.sendall(b'go')
 
-        print('SYNC completed!', flush=True)
+        if self.debug_mode: print('SYNC completed!', flush=True)
 
 
     def _handle_sync_other(self):
