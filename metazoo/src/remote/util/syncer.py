@@ -1,70 +1,80 @@
+import socket
 import time
 
 import util.fs as fs
 import util.location as loc
 
-'''
-This file has functions to synchronise clusters with a 1-second accuracy,
-and takes minimally 2
-That is:
-We guarantee a max timespan of 1 second between any 2 nodes after calling sync()
 
-The syncing itself is a 3-stage process:
-    server0                       | others
- 0. builds sync dir               | waits for stage0 completion token
- 1. announces itself              | announce themselves
- 2. waits until all have anounced | wait for stage1 completion token
+class Syncer(object):
+    """docstring for Syncer"""
+    def __init__(self, config, experiment, designation):
+        self.gid = config.gid
+        self.designation = designation
 
-To make sure that syncing still works later on, stage0 token is removed
-when server0 found everyone had anounced themselves.
-This way, the system will not skip stages on a repeat.
-'''
-
-
-# 2-way simple syncing using filesystem. 
-def sync(config, experiment, designation):
-
-    # Stage 0: we build sync dir if server0, others wait until that is done
-    if config.gid == 0 and designation == 'server':
-        fs.rm(loc.get_metazoo_sync_dir(), ignore_errors=True) # In case of unsuccessful past runs
-        fs.mkdir(loc.get_metazoo_sync_dir())
-        fs.touch(loc.get_metazoo_sync_dir(), 'stage0')
-        print('[SYNC] Synchronisation initiated', flush=True)
-    else:
-        if config.gid ==0 and designation=='client': print('CLient {} stage 5'.format(config.gid), flush=True)
-        while not fs.exists(loc.get_metazoo_sync_dir(), 'stage0'):
-            time.sleep(1)
-        if config.gid ==0 and designation=='client': print('CLient {} stage 6'.format(config.gid), flush=True)
-        
-
-    # Stage 1: Everyone announces
-    fs.touch(loc.get_metazoo_sync_dir(), '{}.{}'.format(designation, config.gid))
-    print('[SYNC] {}.{} announced!'.format(designation, config.gid), flush=True)
-
-    # Stage 2: server0 checks if everyone has announced, others wait.
-    # Note: When server0 finds all have announced, removes stage0 token
-    if designation == 'server' and config.gid == 0:
-        while True:
-            ready_nodes = [x for x in fs.ls(loc.get_metazoo_sync_dir(), only_files=True) if x.split('.')[-1].isnumeric()]
-            ready_servers = set([int(x.split('.')[1]) for x in ready_nodes if fs.basename(x).split('.')[0] == 'server'])
-            ready_clients = set([int(x.split('.')[1]) for x in ready_nodes if fs.basename(x).split('.')[0] == 'client'])
-            diff_servers = set(range(experiment.num_servers)) - ready_servers
-            diff_clients = set(range(experiment.num_clients)) - ready_clients
-
-            if len(diff_servers) > 0 and len(diff_clients) > 0:
-                print('[SYNC] Waiting on servers {} and clients {}'.format(diff_servers, diff_clients), flush=True)               
-            elif len(diff_servers) > 0:
-                print('[SYNC] Waiting on servers {}'.format(diff_servers), flush=True)
-            elif len(diff_clients) > 0:
-                print('[SYNC] Waiting on clients {}'.format(diff_clients), flush=True)
+        self.prime = self.gid == 0 and self.designation == 'server'
+        # Server 0 opens socket to listen
+        if self.prime:
+            self.serversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            serveraddr = (socket.gethostname(), 5000)
+            self.serversock.bind(serveraddr)
+            self.serversock.listen(1070) #Get up to 1070 connections before refusing them
+            self.expected_connections = experiment.num_servers-1+experiment.num_clients
+            self.connections = []
+            print('PRIME stage 0! Address in use: {}'.format(serveraddr), flush=True)
+            for x in range(self.expected_connections):
+                connection, address = self.serversock.accept()
+                self.connections.append(connection)
+            print('PRIME Got all {} connections'.format(self.expected_connections), flush=True)
+        else: #Others open a socket to server 0
+            time.sleep(5) #Give prime a head start
+            if self.designation == 'client':
+                addr = (config.hosts[0].split(':')[0], 5000)
             else:
-                # Everyone has announced. It is safe to remove stage0 token
-                fs.rm(loc.get_metazoo_sync_dir(), 'stage0')
-                fs.touch(loc.get_metazoo_sync_dir(), 'stage1') # stage1 completed!
-                print('[SYNC] Sync finished!', flush=True)
-                return
-            time.sleep(1)
-    else:
-        # Wait for other nodes to sync
-        while not fs.exists(loc.get_metazoo_sync_dir(), 'stage1'):
-            time.sleep(1)
+                addr = ('node{:03d}'.format(config.nodes[0]), 5000)
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print('{}.{} CONNECTING TO addr: {}'.format(self.designation, self.gid, addr), flush=True)
+            self.sock.connect(addr)
+
+
+    def _handle_sync_prime(self):
+        print('SYNC stage 1!', flush=True)
+        for idx, conn in enumerate(self.connections):
+            msg = conn.recv(2)
+    
+        print('SYNC stage 2!', flush=True)
+        # When arriving here, all expected servers and clients are connected and waiting for a reply
+        for conn in self.connections:
+            conn.sendall(b'go')
+
+        print('SYNC completed!', flush=True)
+
+
+    def _handle_sync_other(self):
+        try:
+            self.sock.sendall(b'go')
+            msg = self.sock.recv(2)
+        except Exception as e:
+            self.sock.close()
+            raise e            
+
+
+    def sync(self):
+        if self.prime:
+            self._handle_sync_prime()
+        else:
+            self._handle_sync_other()
+
+
+    def close(self):
+        if self.prime:
+            self.serversock.close()
+            # Quickly close connections and be done with it
+            for conn in self.connections:
+                conn.close()
+        else:
+            self.sock.close()
+
+# 2-way simple syncing using sockets.
+# Warning: This requires num_servers+num_clients-1 sockets open at the same time
+# That means: We can deal with at most 1180 nodes in total.
+# If we go over that, we will start using ports used by zookeeper

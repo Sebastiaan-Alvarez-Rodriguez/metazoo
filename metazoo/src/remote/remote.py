@@ -4,7 +4,7 @@ from dynamic.experiment import Experiment
 from remote.config import config_construct_server, config_construct_client, ServerConfig, ClientConfig
 import remote.server as srv
 import remote.client as cli
-import remote.util.syncer as syncer
+from remote.util.syncer import Syncer
 import util.fs as fs
 import util.location as loc
 from util.repeater import Repeater
@@ -21,9 +21,11 @@ def run_server(debug_mode):
         print('Network booted. Orchestrator ready!', flush=True)
         with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'w') as file:
             file.write('\n'.join(srv.gen_connectionlist(config, experiment)))
-    
-    srv.gen_zookeeper_config(config)
 
+    syncer = Syncer(config, experiment, 'server')
+
+    # All servers must generate a config
+    srv.gen_zookeeper_config(config)
     # All servers must write their myid file
     srv.prepare_datadir(config)
 
@@ -37,7 +39,7 @@ def run_server(debug_mode):
             fs.mkdir(loc.get_node_log_dir(), exist_ok=True)
 
         # Must wait and synchronise with all servers and clients
-        syncer.sync(config, experiment, 'server')
+        syncer.sync()
         
 
         local_log = fs.join(loc.get_node_log_dir(), 'server{}.log'.format(config.gid))
@@ -45,11 +47,11 @@ def run_server(debug_mode):
         
         # If cleaning is requested, boot cleaner service
         if experiment.server_periodic_clean > 0:
-            clean_repeater = Repeater(srv.clean_data(config), experiment.server_periodic_clean)
+            clean_repeater = Repeater(lambda: srv.clean_data(config), experiment.server_periodic_clean)
             clean_repeater.start()
 
+
         experiment.experiment_server(config, executor, repeat)
-        
         status = srv.stop(executor)
         
         # If cleaning is requested, stop cleaner service
@@ -72,9 +74,10 @@ def run_server(debug_mode):
             with open(fs.join(loc.get_metazoo_results_dir(), timestamp, 'failures.metalog'), 'a') as file:
                 file.write('server:{}:{}\n'.format(config.gid, repeat))
 
+    syncer.close()
+
     # Delete sync dir and communication file
     if config.gid == 0:
-        fs.rm(loc.get_metazoo_sync_dir())
         fs.rm(loc.get_cfg_dir(), '.metazoo.cfg')
 
     return global_status
@@ -88,7 +91,6 @@ def run_client(debug_mode):
     repeats = experiment.metazoo.repeats
 
     tmper = idr.identifier_global()
-    if tmper ==0: print('CLient {} waiting for server communication file'.format(tmper))
     #  We must wait until the servers make themselves known
     while not fs.isfile(loc.get_cfg_dir(), '.metazoo.cfg'):
         time.sleep(1)
@@ -96,13 +98,12 @@ def run_client(debug_mode):
     with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'r') as file:
         # <node101>:<clientport1>
         hosts = [line.strip() for line in file.readlines()]
-    if tmper ==0: print('CLient {} stage 1'.format(tmper), flush=True)
+    
     config = config_construct_client(experiment, hosts)
-    if tmper ==0: print('CLient {} stage 2'.format(tmper), flush=True)
-    
     cli.populate_config(config, debug_mode)
-    if tmper ==0: print('CLient {} stage 3'.format(tmper), flush=True)
     
+    syncer = Syncer(config, experiment, 'client')
+
     global_status = True
     for repeat in range(repeats):
         # We make a directory on a local node disk to log quickly.
@@ -111,9 +112,10 @@ def run_client(debug_mode):
             fs.mkdir(loc.get_node_log_dir(), exist_ok=True)
 
         # Must wait and synchronise with all servers and clients
-        if tmper ==0: print('CLient {} stage 4'.format(tmper), flush=True)
-        syncer.sync(config, experiment, 'client')
-
+        print('CLient {} stage PRE_SYNC'.format(tmper), flush=True)
+        syncer.sync()
+        print('CLient {} stage POST_SYNC'.format(tmper), flush=True)
+        
         executor = cli.boot(config)
         experiment.experiment_client(config, executor, repeat)
         status = cli.stop(executor)
@@ -129,5 +131,5 @@ def run_client(debug_mode):
             print('[WARNING] Client {} status in iteration {}/{} not good'.format(config.gid, repeat, repeats-1), flush=True)
             with open(fs.join(loc.get_metazoo_results_dir(), timestamp, 'failures.metalog'), 'a') as file:
                 file.write('server:{}:{}\n'.format(config.gid, repeat))
-
+    syncer.close()
     return global_status

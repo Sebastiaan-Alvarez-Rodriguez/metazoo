@@ -18,11 +18,11 @@ class ExampleExperiment(ExperimentInterface):
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
-        return 3
+        return 2
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
-        return 4
+        return 2
 
     def servers_use_infiniband(self):
         '''True if servers must communicate with eachother over infiniband, False otherwise'''
