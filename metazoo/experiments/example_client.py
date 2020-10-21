@@ -18,11 +18,11 @@ class ExampleExperiment(ExperimentInterface):
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
-        return 2
+        return 5
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
-        return 2
+        return 256
 
     def servers_use_infiniband(self):
         '''True if servers must communicate with eachother over infiniband, False otherwise'''
@@ -38,7 +38,7 @@ class ExampleExperiment(ExperimentInterface):
 
     def clients_core_affinity(self):
         '''Amount of client processes which may be mapped on the same physical node'''
-        return 2
+        return 8
 # prc / prcs per core = allocation
 # 256 /             8 = 32
 # 250 /            10 = 25
@@ -55,8 +55,8 @@ class ExampleExperiment(ExperimentInterface):
     def pre_experiment(self, metazoo):
         cli.prepare_classpath_symlinks()
         '''Execution before experiment starts. Executed on the remote once.'''
-        metazoo.register['time'] = 30
-        nr_kills = 2
+        metazoo.register['time'] = 300
+        nr_kills = 7
         metazoo.register['nr_kills'] = nr_kills
         metazoo.register['kills'] = [random.randint(0, self.num_servers()-1) for x in range(nr_kills)]
         print('Running for {}s, killing: {}'.format(metazoo.register['time'], metazoo.register['kills']), flush=True)
