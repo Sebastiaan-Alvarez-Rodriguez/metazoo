@@ -8,6 +8,11 @@ import util.location as loc
 import util.ui as ui
 
 class Experiment(object):
+    '''
+    Object to handle communication with user-defined experiment interface
+    All attributes are lazy, so the dynamic code is used minimally.
+
+    '''
     def __init__(self, timestamp, location, modulename, clazz):
         self.timestamp = timestamp
         self.location = location
@@ -78,7 +83,6 @@ class Experiment(object):
             if self._server_periodic_clean < 0:
                 raise RuntimeError('Server periodic clean designation must be either 0 (never clean) or an integer representing time (s)')
         return self._server_periodic_clean
-    
 
     @property
     def metazoo(self):
@@ -98,14 +102,18 @@ class Experiment(object):
         self._metazoo._hosts = tuple(config.hosts)
         self._metazoo._executor = executor
         self._metazoo._repeat = repeat
+        self._metazoo._log_location = fs.join(loc.get_metazoo_results_dir(), self.timestamp, repeat, 'experiment_logs')
+
         return self.instance.experiment_client(self._metazoo)
 
     
-    def experiment_server(self, config, executor, repeat):
+    def experiment_server(self, config, executor, repeat, is_leader_func):
         self._metazoo._gid = config.gid
         self._metazoo._lid = config.lid
         self._metazoo._executor = executor
         self._metazoo._repeat = repeat
+        self._metazoo._log_location = fs.join(loc.get_metazoo_results_dir(), self.timestamp, repeat, 'experiment_logs')
+        self._metazoo._is_leader_func = is_leader_func
         return self.instance.experiment_server(self._metazoo)
 
 
@@ -145,8 +153,6 @@ def get_experiment(timestamp, location=None, modulename=None):
 
     candidates = []
     for item in fs.ls(loc.get_metazoo_experiment_dir(), full_paths=True, only_files=True):
-        print('Processing item: '+item, flush=True)
-
         if  item.endswith(fs.join(fs.sep(), 'interface.py')) or not item.endswith('.py'):
             continue
 
@@ -164,5 +170,6 @@ def get_experiment(timestamp, location=None, modulename=None):
     elif len(candidates) == 1:
         return Experiment(timestamp, (candidates[0])[0], (candidates[0])[1], (candidates[0])[2])
     else:
+        print(candidates)
         idx = ui.ask_pick('Multiple suitable experiments found. Please pick an experiment:', [x[0] for x in candidates])
         return Experiment(timestamp, (candidates[idx])[0], (candidates[idx])[1], (candidates[idx])[2])

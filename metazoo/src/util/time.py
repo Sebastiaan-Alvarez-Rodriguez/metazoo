@@ -5,7 +5,7 @@ import util.fs as fs
 import util.location as loc
 import util.ui as ui
 # Generate a timestamp for this experiment and return it
-def timestamp():
+def ask_timestamp():
     # Obtain a timestamp for this experiment, and construct needed directories
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')
     print('Timestamped experiment, designation {}'.format(timestamp))
@@ -18,3 +18,7 @@ def timestamp():
             timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')
             print('New timestamp assigned: {}'.format(timestamp))
     return timestamp
+
+# Generate a timestamp, no user interaction. Use only for logging
+def timestamp(formatting):
+    return datetime.datetime.fromtimestamp(time.time()).strftime(formatting)

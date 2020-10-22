@@ -1,6 +1,6 @@
 # Code in this file is to boot, stop and maintain zookeeper servers
 # A zookeeper server mainly needs a crawlspace, a config, a myid file, and a cleaner
-
+import subprocess
 import os
 
 from remote.config import ServerConfig
@@ -9,7 +9,7 @@ import remote.util.ip as ip
 from util.executor import Executor
 import util.fs as fs
 import util.location as loc
-
+import util.reader as rdr
 
 # Populates uninitialized config members
 def populate_config(config, debug_mode):
@@ -56,21 +56,81 @@ def gen_serverlist(config):
     return serverlist
 
 
+'''
+Checks if current server instance is the leader at invocation time.
+Calls stat command through socket.
+WARNING: A relatively large part of the time, 
+the socket is not responding, or responds with empty string.
+For that reason, we have retries.
+Still, a better solution is needed.
+This is what a response could look like:
+    Zookeeper version: 3.3.0--1, built on 10/22/2020 15:44 GMT
+    Clients:
+     /127.0.0.1:38912[1](queued=0,recved=1,sent=0)
+     /10.141.0.53:50820[1](queued=0,recved=1513242,sent=1862352)
+    Latency min/avg/max: 0/0/222
+    Received: 1513262
+    Sent: 1862359
+    Outstanding: 0
+    Zxid: 0x1000b6d5a
+    Mode: follower
+    Node count: 6
+'''
+def _is_leader_socket(retries):
+    outputs = []
+    for x in range(retries):
+        command = 'echo -e \'stat\' | nc localhost {}'.format(get_client_port())
+        output = subprocess.check_output(command, shell=True).decode('utf-8')
+        print('[LEADER?] Logging output {}: {}'.format(x, output), flush=True)
+        for line in output.split('\n'):
+            print('[LEADER?] Processing line "{}"'.format(line), flush=True)
+            if line.lstrip().startswith('Mode'):
+                print('[LEADER?] {} == leader? {}'.format(line[6:].strip().lower(), line[6:].strip().lower() == 'leader'), flush=True)
+                return line[6:].strip().lower() == 'leader'
+        outputs.append(output)
+    raise RuntimeError('Could not determine leader from outputs "{}"'.format(outputs))
+
+'''
+Detect whether we are a leader or not by reading the entire log.
+This way is the only reliable way to tell whether this server is the leader.
+This function is pretty slow. Still, it is better than the socket alternative.
+
+NOTE: This only works on the server itself, because logs are local!
+Lines giving an indication of being or not being leader could look like:
+[SERVER] 2020-10-22 19:03:41,756 - INFO  [QuorumPeer:/0:0:0:0:0:0:0:0:2181:QuorumPeer@632] - FOLLOWING
+[SERVER] 2020-10-22 18:59:58,859 - INFO  [QuorumPeer:/0:0:0:0:0:0:0:0:2181:QuorumPeer@644] - LEADING
+'''
+def _is_leader_logs(local_log):
+    for line in rdr.reverse_readline(local_log):
+        if line.endswith('FOLLOWING') or line.endswith('LEADING'):
+            return line.endswith('LEADING')
+    print('[LOGGING] WARNING: Could not find out if server to kill is leader', flush=True)
+    return 'Unknown'
+
+# Returns True if this node is the leader, fals if it is a follower, "Unkown" if we cannot find out
+def is_leader(local_log):
+    return _is_leader_logs(local_log)
+
+# Computes and returns client port
+# Computed in such a way that multiple servers can share a host 
+def get_client_port():
+    return 2181 + (idr.num_procs_per_node()+1)*idr.identifier_local()
+
 # Generates the Zookeeper config file for this server instance.
 # Config is written to zookeeper-release-3.3.0/conf/<serverid>.cfg
 def gen_zookeeper_config(config):
     ticktime         = 2000
     initlimit        = 10
     synclimit        = 5
-    clientport       = 2181 + (idr.num_procs_per_node()+1)*idr.identifier_local()
+    clientport       = get_client_port()
 
     config_string = '''
-tickTime={0}
-initLimit={1}
-syncLimit={2}
-dataDir={3}
-clientPort={4}
-{5}'''.format(
+tickTime={}
+initLimit={}
+syncLimit={}
+dataDir={}
+clientPort={}
+{}'''.format(
     ticktime,
     initlimit,
     synclimit,
@@ -88,7 +148,7 @@ def prepare_datadir(config):
     with open(fs.join(config.datadir, 'myid'), 'w') as file: #Write myid file
         file.write(str(config.gid))
 
-# Boot zookeeper servers
+# Boot zookeeper server, return executor to interact with the independent process
 def boot(config, local_log):
     classpath = os.environ['CLASSPATH'] if 'CLASSPATH' in os.environ else ''
     prefix = ':'.join([
@@ -138,6 +198,6 @@ def clean_data(config):
         '4')
     os.system(command)
 
-# Stops Zookeeper instance
+# Stops server instance
 def stop(executor):
     return executor.stop()

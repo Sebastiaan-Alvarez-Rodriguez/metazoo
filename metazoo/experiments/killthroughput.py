@@ -7,14 +7,12 @@ from experiments.interface import ExperimentInterface
 import remote.client as cli
 import util.fs as fs
 import util.location as loc
+import util.time as tm
 
-class ExampleExperiment(ExperimentInterface):
+class KillThroughputExperiment(ExperimentInterface):
     '''
-    A most useful experiment.
-    Check <root dir>/metazoo/experiments/examples/example_simple.py 
-    for an example implementation.
-    Also, check <root dir>/metazoo/dynamic/metazoo.py
-    to find out how metazoo variables work.
+    Experiment measuring throughput performance of saturated servers
+    as server nodes get killed
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
@@ -61,7 +59,7 @@ class ExampleExperiment(ExperimentInterface):
         metazoo.register['kills'] = [random.randint(0, self.num_servers()-1) for x in range(nr_kills)]
         print('Running for {}s, killing: {}'.format(metazoo.register['time'], metazoo.register['kills']), flush=True)
         print('''
-Attentiation! In this experiment, we periodically kill and reboot servers.
+Attention! In this experiment, we periodically kill and reboot servers.
 Some exceptions will appear in your terminal. Do not be alarmed.
 Here we give some of the occuring errors, which are due to killing and not important:
  1. "KeeperErrorCode = ConnectionLoss for /ClientNode"
@@ -91,7 +89,9 @@ Happy experimenting!
 
         for kill in kills:
             if kill == metazoo.gid:
-               metazoo.executor.reboot()
+                with open(fs.join(metazoo.log_location, 'kills.log'), 'a') as file:
+                    file.write('{},{},{}\n'.format(tm.timestamp('%Y-%m-%d_%H:%M:%S.%f'), kill, metazoo.is_leader))
+                metazoo.executor.reboot()
             time.sleep(nap_time)
 
 

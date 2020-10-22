@@ -20,10 +20,11 @@ class MetaZoo(object):
         executor: Exector for the server/client. Will be delivered in started state. Can be stopped and rebooted
         gid: Global ID. Unique for instances in the same group
         lid: Local ID. Unique for instances in the same group, on the same node 
+        log_location: Valid full path to a directory were logs may be written for this experiment.
         repeat: Current repetition of experiment
 
     Members with server node availability:
-        -
+        is_leader: returns True if this node is leader, False if this node is follower, 'Unknown' if it cannot find out
 
     Members with client node availability:
         hosts: A tuple of strings resembling '<ip_or_hostname>:<port>'
@@ -31,11 +32,19 @@ class MetaZoo(object):
     def __init__(self):
         self._register = dict()
         self._executor = None
-        self._hosts = None
         self._gid = None
+        self._hosts = None
+        self._is_leader_func = None
         self._lid = None
+        self._log_location = None
         self._repeats = None
         self._repeat = None
+
+    @property
+    def is_leader(self):
+        if self._is_leader_func == None:
+            raise RuntimeError('Cannot ask leader status now!')
+        return self._is_leader_func()
 
     @property
     def executor(self):
@@ -62,6 +71,10 @@ class MetaZoo(object):
     def set_lid(self):
         raise RuntimeError('You cannot set the lid yourself!')
 
+    @property
+    def log_location(self):
+        return self._log_location
+    
     @property
     def register(self):
         return self._register

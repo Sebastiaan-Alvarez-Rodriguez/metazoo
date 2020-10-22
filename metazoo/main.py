@@ -91,10 +91,11 @@ def exec(repeats, force_comp=False, debug_mode=False):
 
     time_to_reserve = ui.ask_time('How much time to reserve on the cluster for {} repeats?'.format(repeats))
 
-    timestamp = tm.timestamp()
-    # Constructs result directories
+    timestamp = tm.ask_timestamp()
+    # Constructs result and log directories
     for x in range(repeats):
-        fs.mkdir(loc.get_metazoo_results_dir(), timestamp, str(x)) 
+        fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x) 
+        fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x, 'experiment_logs')
 
     print('Loading experiment...', flush=True)
     experiment = exp.get_experiment(timestamp)
@@ -104,9 +105,7 @@ def exec(repeats, force_comp=False, debug_mode=False):
     # Remove stale dirs from previous runs
     fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
     fs.mkdir(loc.get_remote_crawlspace_dir())
-    fs.rm(loc.get_metazoo_sync_dir(), ignore_errors=True)
-    fs.mkdir(loc.get_metazoo_sync_dir())
-        
+    fs.rm(loc.get_cfg_dir(), '.metazoo.cfg', ignore_errors=True)
 
     # Build commands to boot the experiment
     aff_server = experiment.servers_core_affinity

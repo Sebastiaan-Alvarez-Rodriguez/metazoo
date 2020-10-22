@@ -6,8 +6,22 @@ import util.location as loc
 
 
 class Syncer(object):
-    """docstring for Syncer"""
+    '''
+    Object to  handle synchronisation of all nodes between runs.
+    Works with a barrier-style lock:
+    Server 0 (prime) is the barrier lock holder and guide.
+    All other servers and clients connect to prime and send a few bytes
+    to notify prime they are waiting.
+    Once prime has received notifications from all other nodes,
+    it sends a few bytes back, signalling them to continue.
+    This sending back is very fast, since the connections have remained open
+    in the meantime.
+
+    Initial measurements show this synchronisation strategy can sync
+    all nodes to microsecond-length windows
+    '''
     def __init__(self, config, experiment, designation, debug_mode=False):
+        retries = 5 # Number of retries before we blame the network
         self.gid = config.gid
         self.designation = designation
         self.debug_mode = debug_mode
@@ -34,8 +48,16 @@ class Syncer(object):
                 addr = ('node{:03d}'.format(config.nodes[0]), 5000)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.debug_mode: print('{}.{} CONNECTING TO addr: {}'.format(self.designation, self.gid, addr), flush=True)
-            self.sock.connect(addr)
-
+            for x in range(retries):
+                try:
+                    self.sock.connect(addr)
+                    break
+                except ConnectionRefusedError as e:
+                    time.sleep(1)
+                    if x == 0:
+                        print('[SYNC] {}.{} cannot connect to address {} (connection refused). Retrying...'.format(designation.upper(), self.gid, addr))
+                    elif x == retries-1:
+                        raise e
 
     def _handle_sync_prime(self):
         if self.debug_mode: print('SYNC stage 1!', flush=True)

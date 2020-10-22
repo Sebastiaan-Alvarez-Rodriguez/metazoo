@@ -51,7 +51,7 @@ def run_server(debug_mode):
             clean_repeater.start()
 
 
-        experiment.experiment_server(config, executor, repeat)
+        experiment.experiment_server(config, executor, repeat, lambda: srv.is_leader(local_log))
         status = srv.stop(executor)
         
         # If cleaning is requested, stop cleaner service

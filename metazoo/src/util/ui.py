@@ -41,8 +41,11 @@ def ask_time(question):
         val = ask_string(question+' [[hh:]mm:]ss ')
         comps = val.split(':')
         complen = len(comps)
-        if complen >= 3: #We have hours, minutes and seconds
-            if not comp[0].isnumeric():
+        if len(comps) > 3:
+            print('Provide time as [[hh:]mm:]ss. Try again.')
+            continue
+        if complen == 3: #We have hours, minutes and seconds
+            if not comps[0].isnumeric():
                 print('Hours are not numeric. Try again.')
                 continue
             del comps[0]
