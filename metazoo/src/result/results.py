@@ -4,8 +4,9 @@
 import argparse
 import sys
 
-import util.location as loc
 import util.fs as fs
+import util.location as loc
+from util.printer import *
 
 
 # Register 'results' subparser
@@ -28,7 +29,7 @@ def results(parser, args):
     # We explicitly MUST check if matplotlib is available to import
     # If it is not, we cannot process results on the current machine
     if not importer.library_exists('matplotlib'):
-        print('Cannot work with results. Matplotlib is not available!')
+        printe('Cannot work with results. Matplotlib is not available!')
         return
 
     if args.store and args.type is None:
@@ -40,7 +41,7 @@ def results(parser, args):
         return
 
     if not fs.isdir(loc.get_metazoo_results_dir()):
-        print('[FAILURE] You have no experiment results directory "{}". Run experiments to get some data first.'.format(log.get_metazoo_results_dir()))
+        printe('[FAILURE] You have no experiment results directory "{}". Run experiments to get some data first.'.format(log.get_metazoo_results_dir()))
     fargs = [args.large, args.no_show, args.store, args.type]
     if args.killthroughput:
         import result.killthroughput.gen as kgen

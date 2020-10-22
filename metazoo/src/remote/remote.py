@@ -13,7 +13,9 @@ import remote.util.identifier as idr
 from remote.util.syncer import Syncer
 import util.fs as fs
 import util.location as loc
+from util.printer import *
 from util.repeater import Repeater
+
 
 # Controls server nodes. Executed by all servers.
 def run_server(debug_mode):
@@ -24,7 +26,7 @@ def run_server(debug_mode):
     config = config_construct_server(experiment)
     srv.populate_config(config, debug_mode)
     if config.gid == 0:
-        print('Network booted. Orchestrator ready!', flush=True)
+        print('Network booted. Orchestrator ready!')
         with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'w') as file:
             file.write('\n'.join(srv.gen_connectionlist(config, experiment)))
 
@@ -71,11 +73,11 @@ def run_server(debug_mode):
             fs.mv(local_log, fs.join(loc.get_metazoo_results_dir(), timestamp, repeat, fs.basename(local_log)))
         
         if config.gid == 0:
-            print('Server iteration {}/{} complete'.format(repeat+1, repeats), flush=True)
+            prints('Server iteration {}/{} complete'.format(repeat+1, repeats))
         
         # We log failed executions in a results/<timestamp>/failures.metalog
         if not status:
-            print('[WARNING] Server {} status in iteration {}/{} not good'.format(config.gid, repeat, repeats-1), flush=True)
+            printw('Server {} status in iteration {}/{} not good'.format(config.gid, repeat, repeats-1))
             with open(fs.join(loc.get_metazoo_results_dir(), timestamp, 'failures.metalog'), 'a') as file:
                 file.write('server:{}:{}\n'.format(config.gid, repeat))
 
@@ -117,9 +119,9 @@ def run_client(debug_mode):
 
         # Must wait and synchronise with all servers and clients
         
-        if debug_mode: print('Client {} stage PRE_SYNC'.format(myid), flush=True)
+        if debug_mode: print('Client {} stage PRE_SYNC'.format(myid))
         syncer.sync()
-        if debug_mode: print('Client {} stage POST_SYNC'.format(myid), flush=True)
+        if debug_mode: print('Client {} stage POST_SYNC'.format(myid))
         
         executor = cli.boot(config)
         experiment.experiment_client(config, executor, repeat)
@@ -133,7 +135,7 @@ def run_client(debug_mode):
 
         # We log failed executions in a results/<timestamp>/failures.metalog
         if not status:
-            print('[WARNING] Client {} status in iteration {}/{} not good'.format(config.gid, repeat, repeats-1), flush=True)
+            printw('Client {} status in iteration {}/{} not good'.format(config.gid, repeat, repeats-1))
             with open(fs.join(loc.get_metazoo_results_dir(), timestamp, 'failures.metalog'), 'a') as file:
                 file.write('server:{}:{}\n'.format(config.gid, repeat))
     syncer.close()

@@ -5,6 +5,13 @@
 
 from enum import Enum
 import os
+import builtins
+
+# Overridden print function to always flush.
+# We need this practically everywhere when using ssh.
+def print(*args, **kwargs):
+    kwargs['flush'] = True
+    return builtins.print(*args, **kwargs)
 
 
 class Color(Enum):
@@ -21,24 +28,19 @@ class Color(Enum):
 def printc(string, color, end='\n'):
     print(format(string, color), end=end)
 
-# Print given warning text
-def printwarn(string, color=Color.YEL, **kwargs):
-    print(f'[WARNING] {format(string, color)}', **kwargs)
+# Print given success text
+def prints(string, color=Color.GRN, **kwargs):
+    print('[SUCCESS] {}'.format(format(string, color)), **kwargs)
 
-# Print given warning text, flushing to terminal.
-# Because we flush so many times, we made this shortcut
-def printwarnf(string, color=Color.YEL, **kwargs):
-    printwarn(string, color, flush=True, **kwargs)
+# Print given warning text
+def printw(string, color=Color.YEL, **kwargs):
+    print('[WARNING] {}'.format(format(string, color)), **kwargs)
 
 
 # Print given error text
-def printerr(string, color=Color.RED, **kwargs):
-    print(f'Error: {format(string, color)}', **kwargs)
+def printe(string, color=Color.RED, **kwargs):
+    print('[ERROR] {}'.format(format(string, color)), **kwargs)
 
-# Print given error text, flushing to terminal.
-# Because we flush so many times, we made this shortcut
-def printerrf(string, color=Color.RED, **kwargs):
-    printerr(string, color, flush=True, **kwargs)
 
 # Format a string with a color
 def format(string, color):

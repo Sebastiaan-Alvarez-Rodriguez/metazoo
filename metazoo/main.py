@@ -19,6 +19,7 @@ import util.location as loc
 import util.fs as fs
 import util.time as tm
 import util.ui as ui
+from util.printer import *
 
 # Returns True if Zookeeper is compiled, False otherwise
 def is_compiled():
@@ -31,10 +32,10 @@ def check(silent=False):
     b = jv.check_version(minVersion=8, maxVersion=8)
     if a and b:
         if not silent:
-            print('[SUCCESS] Requirements satisfied')
+            prints('Requirements satisfied')
         return True
     if not silent:
-        print('[FAILURE] Requirements not satisfied: ', end='')
+        printe('Requirements not satisfied: ', end='')
         if not a:
             print('Ant', end='')
         if not b:
@@ -45,7 +46,7 @@ def check(silent=False):
 # Handles clean commandline argument
 def clean():
     if not ant.install():
-        print('[FAILURE] Cleaning requires Ant!')
+        printe('Cleaning requires Ant!')
         return False
     print('Cleaning...')
     return os.system('cd {0} && bash {1} clean > /dev/null 2>&1'.format(loc.get_zookeeper_dir(), loc.get_ant_loc_bin())) == 0
@@ -53,26 +54,26 @@ def clean():
 
 # Handles compile commandline argument
 def compile():
-    print('Compiling...', flush=True)
+    print('Compiling...')
     if not ant.install():
-        print('[FAILURE] Cannot install Apache Ant')
+        printe('Cannot install Apache Ant')
         return False
 
     if not check(silent=True):
-        print('[FAILURE] Cannot compile due to system errors')
+        printe('Cannot compile due to system errors')
         return False
 
     zookeeper_loc = loc.get_zookeeper_dir()
     if not fs.isdir(zookeeper_loc):
-        print('[FAILURE] Could not find {0}'.format(zookeeper_loc))
+        printe('Could not find {0}'.format(zookeeper_loc))
         return False
 
     statuscode = os.system('cd {0} && bash {1} jar > /dev/null 2>&1'.format(zookeeper_loc, loc.get_ant_loc_bin()))
 
     if statuscode == 0:
-        print('Compilation completed!')
+        prints('Compilation completed!')
     else:
-        print('Compilation failed!')
+        printe('Compilation failed!')
     return statuscode == 0
 
 # Redirects server node control to dedicated code
@@ -87,13 +88,13 @@ def _exec_internal_server(debug_mode=False):
 
 # Handles execution on the remote main node, before booting the cluster
 def exec(repeats, force_comp=False, debug_mode=False):
-    print('Connected!', flush=True)
+    print('Connected!')
     if not fs.isdir(loc.get_remote_metazoo_dir()):
-        print('[FAILURE] Missing project on remote. Did you run "{} --init"?'.format(sys.argv[0]))
+        printe('Missing project on remote. Did you run "{} --init"?'.format(sys.argv[0]))
         return False
     if (force_comp or not is_compiled()):
         if not compile():
-            print('[FAILURE] Could not compile!')
+            printe('Could not compile!')
             return False
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
@@ -106,7 +107,7 @@ def exec(repeats, force_comp=False, debug_mode=False):
         fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x) 
         fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x, 'experiment_logs')
 
-    print('Loading experiment...', flush=True)
+    print('Loading experiment...')
     experiment = exp.get_experiment(timestamp)
 
     experiment.pre_experiment(repeats)
@@ -124,7 +125,7 @@ def exec(repeats, force_comp=False, debug_mode=False):
     nodes_client = experiment.num_clients // aff_client
     command_client = 'prun -np {} -{} -t {} python3 {} --exec_internal_client {}'.format(nodes_client, aff_client, time_to_reserve, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
 
-    print('Booting network...', flush=True)
+    print('Booting network...')
     server_exec = Executor(command_server)
     client_exec = Executor(command_client)
 
@@ -135,9 +136,9 @@ def exec(repeats, force_comp=False, debug_mode=False):
     experiment.clean()
 
     if status:
-        print('[SUCCESS] Experiment complete!')
+        prints('Experiment complete!')
     else:
-        print('[FAILURE] Experiment had errors!')
+        printe('Experiment had errors!')
     return status
 
 # Handles export commandline argument
@@ -152,10 +153,10 @@ def export(full_exp=False):
             '--exclude __pycache__',
             '--exclude zookeeper-client')
         if not clean():
-            print('[FAILURE] Cleaning failed')
+            printe('Cleaning failed')
             return False
     else:
-        print('[Note] This means we skip zookeeper-release-3.3.0 files.')
+        print('[NOTE] This means we skip zookeeper-release-3.3.0 files.')
         command = 'rsync -az {} {}:{} {} {} {} {} {}'.format(
             fs.dirname(fs.abspath()),
             st.ssh_key_name,
@@ -166,17 +167,17 @@ def export(full_exp=False):
             '--exclude .git',
             '--exclude __pycache__')
     if os.system(command) == 0:
-        print('Export success!')
+        prints('Export success!')
         return True
     else:
-        print('Export failure!')
+        printe('Export failure!')
         return False    
 
 # Compiles code on DAS5 main node
 def _init_internal():
-    print('Connected!', flush=True)
+    print('Connected!')
     if not compile():
-        print('[FAILURE] Could not compile code on DAS5!')
+        printe('Could not compile code on DAS5!')
         exit(1)
     exit(0)
 
@@ -184,18 +185,17 @@ def _init_internal():
 def init():
     print('Initializing MetaZoo...')
     if not export(full_exp=True):
-        print('[FAILURE] Unable to export to DAS5 remote using user/ssh-key "{}"'.format(st.ssh_key_name))
+        printe('Unable to export to DAS5 remote using user/ssh-key "{}"'.format(st.ssh_key_name))
         return False
     print('Connecting using key "{0}"...'.format(st.ssh_key_name))
 
-    tmp = os.system('ssh {0} "python3 {1}/metazoo/main.py --init_internal"'.format(st.ssh_key_name, loc.get_remote_metazoo_dir())) == 0
-    if tmp:
-        print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
+    if os.system('ssh {0} "python3 {1}/metazoo/main.py --init_internal"'.format(st.ssh_key_name, loc.get_remote_metazoo_dir())) == 0:
+        prints('Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
 # Handles remote commandline argument
 def remote(repeats, force_exp=False, force_comp=False, debug_mode=False):
     if force_exp and not export(full_exp=True):
-        print('[FAILURE] Could not export data')
+        printe('Could not export data')
         return False
 
     program = '--exec {}'.format(repeats)

@@ -11,6 +11,7 @@ import remote.util.ip as ip
 from util.executor import Executor
 import util.fs as fs
 import util.location as loc
+from util.printer import *
 import util.reader as rdr
 
 # Populates uninitialized config members
@@ -83,11 +84,8 @@ def _is_leader_socket(retries):
     for x in range(retries):
         command = 'echo -e \'stat\' | nc localhost {}'.format(get_client_port())
         output = subprocess.check_output(command, shell=True).decode('utf-8')
-        print('[LEADER?] Logging output {}: {}'.format(x, output), flush=True)
         for line in output.split('\n'):
-            print('[LEADER?] Processing line "{}"'.format(line), flush=True)
             if line.lstrip().startswith('Mode'):
-                print('[LEADER?] {} == leader? {}'.format(line[6:].strip().lower(), line[6:].strip().lower() == 'leader'), flush=True)
                 return line[6:].strip().lower() == 'leader'
         outputs.append(output)
     raise RuntimeError('Could not determine leader from outputs "{}"'.format(outputs))
@@ -106,7 +104,7 @@ def _is_leader_logs(local_log):
     for line in rdr.reverse_readline(local_log):
         if line.endswith('FOLLOWING') or line.endswith('LEADING'):
             return line.endswith('LEADING')
-    print('[LOGGING] WARNING: Could not find out if server to kill is leader', flush=True)
+    printw('Could not find out if server to kill is leader')
     return 'Unknown'
 
 # Returns True if this node is the leader, False if it is a follower, "Unkown" if we cannot find out

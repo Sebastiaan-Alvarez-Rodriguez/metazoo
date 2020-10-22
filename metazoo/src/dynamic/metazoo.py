@@ -2,6 +2,7 @@ import pickle
 
 import util.fs as fs
 import util.location as loc
+from util.printer import *
 
 
 class MetaZoo(object):
@@ -114,7 +115,7 @@ class MetaZoo(object):
             try:
                 pickle.dump(self, file, pickle.HIGHEST_PROTOCOL)
             except Exception as e:
-                print('[FAILURE] Could not persist register. Did you store any Objects that cannot be pickled in the MetaZoo register?')
+                printe('Could not persist register. Did you store any Objects that cannot be pickled in the MetaZoo register?')
                 raise e
 
 
@@ -128,7 +129,7 @@ class MetaZoo(object):
             try:
                 return pickle.load(file)
             except Exception as e:
-                print('[FAILURE] Could not load register. Did you store any Objects that cannot be pickled in the MetaZoo register?')
+                printe('Could not load register. Did you store any Objects that cannot be pickled in the MetaZoo register?')
                 raise e
 
 

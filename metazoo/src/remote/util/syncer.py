@@ -4,6 +4,8 @@ import time
 import util.fs as fs
 import util.location as loc
 
+from util.printer import *
+
 
 class Syncer(object):
     '''
@@ -55,10 +57,11 @@ class Syncer(object):
                 except ConnectionRefusedError as e:
                     time.sleep(1)
                     if x == 0:
-                        print('[SYNC] {}.{} cannot connect to address {} (connection refused). Retrying...'.format(designation.upper(), self.gid, addr))
+                        printw('[SYNC] {}.{} cannot connect to address {} (connection refused). Retrying...'.format(designation.upper(), self.gid, addr))
                     elif x == retries-1:
                         raise e
 
+    # Handle syncinc if we are prime server
     def _handle_sync_prime(self):
         if self.debug_mode: print('SYNC stage 1!', flush=True)
         for idx, conn in enumerate(self.connections):
@@ -71,7 +74,7 @@ class Syncer(object):
 
         if self.debug_mode: print('SYNC completed!', flush=True)
 
-
+    # Handle syncing if we are not prime server
     def _handle_sync_other(self):
         try:
             self.sock.sendall(b'go')
@@ -80,7 +83,7 @@ class Syncer(object):
             self.sock.close()
             raise e            
 
-
+    # Synchronise with all other nodes
     def sync(self):
         if self.prime:
             self._handle_sync_prime()
@@ -88,6 +91,7 @@ class Syncer(object):
             self._handle_sync_other()
 
 
+    # Close network. Every node should call this to clean up
     def close(self):
         if self.prime:
             self.serversock.close()
@@ -96,8 +100,3 @@ class Syncer(object):
                 conn.close()
         else:
             self.sock.close()
-
-# 2-way simple syncing using sockets.
-# Warning: This requires num_servers+num_clients-1 sockets open at the same time
-# That means: We can deal with at most 1180 nodes in total.
-# If we go over that, we will start using ports used by zookeeper

@@ -5,6 +5,7 @@ import time
 
 import util.fs as fs
 import util.location as loc
+from util.printer import *
 import util.ui as ui
 
 # Generate/ask for a timestamp for this experiment and return it

@@ -1,12 +1,13 @@
 # In this fiile, we provide functions to
 # install and interact with Apache Ant
 
-
-import util.location as loc
-import util.fs as fs
+from pathlib import Path
 import urllib.request
 import zipfile
-from pathlib import Path
+
+import util.fs as fs
+import util.location as loc
+from util.printer import *
 
 
 # Check if Ant is installed in deps/ant
@@ -37,7 +38,11 @@ def install():
                 zip_ref.extractall(depsloc)
             break
         except zipfile.BadZipFile as e:
-            print('Bad zipfile detected. Retrying...')
+            if x == 4:
+                printe('Could not download zip file correctly')
+                return False
+            elif x == 0:
+                printw('Bad zipfile detected. Retrying...')
 
     apache_ant = 'apache-ant-1.10.9'
     tmploc = fs.join(depsloc, apache_ant)

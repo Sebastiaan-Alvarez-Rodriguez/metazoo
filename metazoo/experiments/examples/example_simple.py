@@ -1,5 +1,10 @@
 from experiments.interface import ExperimentInterface
 
+# We suggest all experiments which print anything to the console
+# to use below import statement. This forces in-order printing. 
+from util.printer import *
+
+
 class ExampleExperiment(ExperimentInterface):
     '''
     A most useful experiment.
@@ -33,7 +38,7 @@ class ExampleExperiment(ExperimentInterface):
         '''Amount of client processes which may be mapped on the same physical node'''
         return 1
 
-    def server_periodic_clean(self);
+    def server_periodic_clean(self):
         '''Period in seconds for servers to clean their crawlspaces. 0 means no cleaning'''
         return 0
 

@@ -7,8 +7,10 @@
 
 import configparser
 
-import util.ui as ui
 import util.fs as fs
+from util.printer import *
+import util.ui as ui
+
 
 # Gets path to config storage location
 def get_metazoo_settings_file():

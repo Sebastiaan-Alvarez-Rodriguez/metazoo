@@ -169,6 +169,5 @@ def get_experiment(timestamp, location=None, modulename=None):
     elif len(candidates) == 1:
         return Experiment(timestamp, (candidates[0])[0], (candidates[0])[1], (candidates[0])[2])
     else:
-        print(candidates)
         idx = ui.ask_pick('Multiple suitable experiments found. Please pick an experiment:', [x[0] for x in candidates])
         return Experiment(timestamp, (candidates[idx])[0], (candidates[idx])[1], (candidates[idx])[2])

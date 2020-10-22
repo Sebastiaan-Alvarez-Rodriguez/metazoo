@@ -7,6 +7,7 @@ from experiments.interface import ExperimentInterface
 import remote.client as cli
 import util.fs as fs
 import util.location as loc
+from util.printer import *
 import util.time as tm
 
 class KillThroughputExperiment(ExperimentInterface):
