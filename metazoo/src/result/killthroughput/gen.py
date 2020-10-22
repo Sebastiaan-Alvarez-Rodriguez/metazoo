@@ -6,6 +6,7 @@ import util.fs as fs
 import util.location as loc
 
 
+# We process killthroughput experiment results here
 def killthroughput(logdir, large, no_show, store_fig, filetype):
     reader = Reader(fs.join(loc.get_metazoo_results_dir(), logdir))
     

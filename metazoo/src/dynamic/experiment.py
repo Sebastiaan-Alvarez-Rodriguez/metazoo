@@ -11,7 +11,6 @@ class Experiment(object):
     '''
     Object to handle communication with user-defined experiment interface
     All attributes are lazy, so the dynamic code is used minimally.
-
     '''
     def __init__(self, timestamp, location, modulename, clazz):
         self.timestamp = timestamp

@@ -1,14 +1,19 @@
+# In this file, we provide functions to interact with Java
+# We explicitly do NOT provide ways to install Java,
+# as it is already installed on the DAS5
+
 import os
 import util.fs as fs
 import subprocess
 
+# Check if we can call given arguments. Returns True if we can, False otherwise
 def check_can_call(arglist):
     if len(arglist) > 0 and not subprocess.call(arglist, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) == 0:
         print('Cannot call "{0}" for some reason. Please check if you have access permission to it.'.format(arglist[0]))
         return False
     return True
 
-# Checks if given Java version is available on the system
+# Checks if a Java installation within version bounds is available on the system
 def check_version(minVersion=8, maxVersion=8):
     returncode = True
     if not 'JAVA_HOME' in os.environ:

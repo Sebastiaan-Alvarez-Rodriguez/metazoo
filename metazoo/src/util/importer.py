@@ -1,7 +1,11 @@
+# Contains functions to interact with Python's import libraries.
+# As there import libraries change a lot between versions,
+# this file is essential to work with importlib.
+
 import sys
 import importlib
 
-# Check if a given library exists
+# Check if a given library exists. Returns True if given name is a library, False otherwise
 def library_exists(name):
     if sys.version_info >= (3.4):
         return importlib.util.find_spec(str(name)) is not None

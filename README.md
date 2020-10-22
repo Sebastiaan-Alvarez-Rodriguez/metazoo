@@ -8,7 +8,12 @@ there is only one who can save the project: MetaZoo
 ## Usage
 Here, we describe how to use and interact with this project.
 
-### Initialization
+### Installation
+We require a few things:
+ 1. Is `JAVA_HOME` set in the `~/.bashrc` of the remote? (DAS5 does not provide this)
+ 2. Is `JAVA_HOME` pointed such that there is a `JAVA_HOME/bin/java`, `JAVA_HOME/bin/javac`, both version 8?
+
+If you have that setup, proceed to the next stage.
 In case you have only just cloned this repository, you will want to use:
 ```bash
 python3 <project root>/metazoo/main.py --init
@@ -23,12 +28,11 @@ You only have to call `--init` once (although calling it multiple times causes n
 ### Running
 After initializattion, we run 
 ```bash
-python3 <project root>/metazoo/main.py --remote
+python3 <project root>/metazoo/main.py --remote <repeats>
 ```
 Here, `--remote` tells MetaZoo we want to execute on the remote cluster.
 MetaZoo will not re-export files, and neither will it re-compile Zookeeper.
 You will be asked a few important questions, and then the cluster will be deployed.
-
 
 ___
 

@@ -1,7 +1,11 @@
 import os
 
-# Credits to srohde and Mark Amery: https://stackoverflow.com/a/23646049
-# Note: This technically is incorrect for text files, but only when using encodings s.t. seek() and read() return different numbers (e.g. utf-16)
+'''
+Credits to srohde and Mark Amery: https://stackoverflow.com/a/23646049
+Note: This technically is incorrect for text files,
+but only when using encodings s.t. seek() and read() 
+return different numbers (e.g. utf-16)
+'''
 def reverse_readline(filename, buf_size=8192):
     """A generator that returns the lines of a file in reverse order"""
     with open(filename) as fh:

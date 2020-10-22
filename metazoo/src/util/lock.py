@@ -1,3 +1,6 @@
+# File which provides Java-style class locking
+
+
 from functools import wraps
 from threading import Lock
 

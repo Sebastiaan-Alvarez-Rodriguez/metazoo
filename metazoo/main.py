@@ -1,4 +1,8 @@
 #!/usr/bin/python
+# The main file of MetaZoo.
+# This file handles main argument parsing, 
+# initial command processing and command redirection
+
 import argparse
 import os
 import sys
@@ -16,6 +20,7 @@ import util.fs as fs
 import util.time as tm
 import util.ui as ui
 
+# Returns True if Zookeeper is compiled, False otherwise
 def is_compiled():
     return fs.isfile(loc.get_build_dir(), 'zookeeper-3.3.0.jar')
 
@@ -37,7 +42,7 @@ def check(silent=False):
         print()
     return False
 
-
+# Handles clean commandline argument
 def clean():
     if not ant.install():
         print('[FAILURE] Cleaning requires Ant!')
@@ -46,6 +51,7 @@ def clean():
     return os.system('cd {0} && bash {1} clean > /dev/null 2>&1'.format(loc.get_zookeeper_dir(), loc.get_ant_loc_bin())) == 0
 
 
+# Handles compile commandline argument
 def compile():
     print('Compiling...', flush=True)
     if not ant.install():
@@ -69,14 +75,17 @@ def compile():
         print('Compilation failed!')
     return statuscode == 0
 
-
+# Redirects server node control to dedicated code
 def _exec_internal_client(debug_mode=False):
     return rmt.run_client(debug_mode)
 
+
+# Redirects server node control to dedicated code
 def _exec_internal_server(debug_mode=False):
     return rmt.run_server(debug_mode)
 
 
+# Handles execution on the remote main node, before booting the cluster
 def exec(repeats, force_comp=False, debug_mode=False):
     print('Connected!', flush=True)
     if not fs.isdir(loc.get_remote_metazoo_dir()):
@@ -131,7 +140,7 @@ def exec(repeats, force_comp=False, debug_mode=False):
         print('[FAILURE] Experiment had errors!')
     return status
 
-
+# Handles export commandline argument
 def export(full_exp=False):
     print('Copying files using "{}" strategy, using key "{}"...'.format('full' if full_exp else 'fast', st.ssh_key_name))
     if full_exp:
@@ -163,7 +172,7 @@ def export(full_exp=False):
         print('Export failure!')
         return False    
 
-
+# Compiles code on DAS5 main node
 def _init_internal():
     print('Connected!', flush=True)
     if not compile():
@@ -171,7 +180,7 @@ def _init_internal():
         exit(1)
     exit(0)
 
-
+# Handles init commandline argument
 def init():
     print('Initializing MetaZoo...')
     if not export(full_exp=True):
@@ -183,7 +192,7 @@ def init():
     if tmp:
         print('[SUCCESS] Completed MetaZoo initialization. Use "{} --remote" to start execution on the remote host'.format(sys.argv[0]))
 
-
+# Handles remote commandline argument
 def remote(repeats, force_exp=False, force_comp=False, debug_mode=False):
     if force_exp and not export(full_exp=True):
         print('[FAILURE] Could not export data')
@@ -200,10 +209,12 @@ def remote(repeats, force_exp=False, force_comp=False, debug_mode=False):
     print('Connecting using key "{0}"...'.format(st.ssh_key_name))
     return os.system(command) == 0
 
+# Redirects execution to settings.py, where user can change settings
 def settings():
     st.change_settings()
 
 
+# The main function of MetaZoo
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     subparser = parser.add_subparsers()
@@ -220,7 +231,6 @@ def main():
     group.add_argument('--init_internal', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--init', help='Initialize MetaZoo to run code on the DAS5', action='store_true')
     group.add_argument('--remote', nargs=1, metavar='repeats', help='execute code on the DAS5 from your local machine')
-    # group.add_argument('--results', nargs='+', help='Process results on local machine')
     group.add_argument('--settings', help='Change settings', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
     parser.add_argument('-d', '--debug-mode', dest='debug_mode', help='Run remote in debug mode', action='store_true')

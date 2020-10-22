@@ -1,11 +1,13 @@
+# This file contains many functions to help interact 
+# with the filesystem in an OS independent manner
+# 
+# This mainly is a wrapper around the system's os libraries.
+# Quite a few handy tricks are stored here.
+
 import os
 import shutil
 import sys
 
-'''
-This file contains many functions to help interact with the filesystem
-in an OS independent manner
-'''
 
 def abspath(path=os.path.dirname(sys.argv[0])):
     return os.path.abspath(path)

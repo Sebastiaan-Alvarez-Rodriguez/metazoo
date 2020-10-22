@@ -1,5 +1,7 @@
 # Code in this file is to boot, stop and maintain zookeeper servers
 # A zookeeper server mainly needs a crawlspace, a config, a myid file, and a cleaner
+
+
 import subprocess
 import os
 
@@ -59,10 +61,10 @@ def gen_serverlist(config):
 '''
 Checks if current server instance is the leader at invocation time.
 Calls stat command through socket.
+
 WARNING: A relatively large part of the time, 
 the socket is not responding, or responds with empty string.
-For that reason, we have retries.
-Still, a better solution is needed.
+For that reason, we have retries. Still, better use _is_leader_logs().
 This is what a response could look like:
     Zookeeper version: 3.3.0--1, built on 10/22/2020 15:44 GMT
     Clients:
@@ -107,7 +109,7 @@ def _is_leader_logs(local_log):
     print('[LOGGING] WARNING: Could not find out if server to kill is leader', flush=True)
     return 'Unknown'
 
-# Returns True if this node is the leader, fals if it is a follower, "Unkown" if we cannot find out
+# Returns True if this node is the leader, False if it is a follower, "Unkown" if we cannot find out
 def is_leader(local_log):
     return _is_leader_logs(local_log)
 

@@ -1,10 +1,13 @@
+# This file contains functions to generate timestamps
+
 import datetime
 import time
 
 import util.fs as fs
 import util.location as loc
 import util.ui as ui
-# Generate a timestamp for this experiment and return it
+
+# Generate/ask for a timestamp for this experiment and return it
 def ask_timestamp():
     # Obtain a timestamp for this experiment, and construct needed directories
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H%M%S')

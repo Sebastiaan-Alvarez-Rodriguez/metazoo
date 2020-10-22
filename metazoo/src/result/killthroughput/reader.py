@@ -1,7 +1,15 @@
+# This file contains a fast log reader for increasing log numbers
+
+
 import util.fs as fs
 
+
 class Reader(object):
-    '''Object to read killthroughput data from a path'''
+    '''
+    Object to read killthroughput data from a path
+    Expects a path with files '0.log', '1.log', ....
+    Reader is ignorant of all other files and directories
+    '''
     def __init__(self, path):
         if not fs.isdir(path):
             raise RuntimeError('Cannot read killthroughput from path "{}"'.format(path))

@@ -1,3 +1,6 @@
+# This file provides useful user interaction primitives.
+ 
+
 # Ask the user to provide an integer value, with optional min and max values
 def ask_int(question, minval=None, maxval=None):
     while True:

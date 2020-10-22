@@ -4,8 +4,11 @@ import threading
 from util.lock import Synchronized
 
 class Executor(Synchronized):
-    # Run subprocess commands in a different thread
-
+    '''
+    Object to run subprocess commands in a separate thread.
+    This way, Python can continue operating while interacting 
+    with subprocesses.
+    '''
     def __init__(self, cmd):
         self.cmd = cmd
         self.started = False
@@ -14,8 +17,7 @@ class Executor(Synchronized):
         self.process = None
         self.kwargs = None
 
-
-
+    # Run our command. Returns immediately after booting a thread
     def run(self, **kwargs):
         if self.started:
             raise RuntimeError('Executor already started. Make a new Executor for a new run')
@@ -48,9 +50,11 @@ class Executor(Synchronized):
         for x in executors:
             x.run(**kwargs)
 
-    # Function to wait for all executors.
-    # If stop_on_error is True, we immediately kill all remaining executors
-    # Returns True if all processes sucessfully executed, False otherwise
+    '''
+    Function to wait for all executors.
+    If stop_on_error is True, we immediately kill all remaining executors
+    Returns True if all processes sucessfully executed, False otherwise
+    '''
     @staticmethod
     def wait_all(*executors, stop_on_error=True):
         status = True
@@ -81,15 +85,16 @@ class Executor(Synchronized):
                 self.thread.join()
                 self.stopped = True
         return self.process.returncode
-        # if self.started and not self.stopped:
-        #     os.system('kill -9 {0}'.format(thread.get_native_id()))
 
+    # Stop and then start wrapped command again
+    # NOTE: This kills current thread, creates new one
     def reboot(self):
         self.stop()
         self.started = False
         self.stopped = False
         self.run(**self.kwargs)
 
+    # Returns pid of running process, or -1 if it cannot access current process 
     def get_pid(self):
         if (not self.started) or self.stopped or self.process == None:
             return -1

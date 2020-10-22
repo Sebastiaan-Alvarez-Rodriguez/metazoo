@@ -1,15 +1,21 @@
+# Code in this file is the entrypoint for prun calls.
+# run_server() and run_client() are called as soon as allocation is done.
+# Goal of this file is to guide data processing on server and client nodes.
+
+
 import time
 
 from dynamic.experiment import Experiment
 from remote.config import config_construct_server, config_construct_client, ServerConfig, ClientConfig
-import remote.server as srv
 import remote.client as cli
+import remote.server as srv
+import remote.util.identifier as idr
 from remote.util.syncer import Syncer
 import util.fs as fs
 import util.location as loc
 from util.repeater import Repeater
 
-
+# Controls server nodes. Executed by all servers.
 def run_server(debug_mode):
     experiment = Experiment.load()
     timestamp = experiment.timestamp
@@ -82,14 +88,13 @@ def run_server(debug_mode):
     return global_status
 
 
-import remote.util.identifier as idr
-
+# Controls client nodes. Executed by all clients.
 def run_client(debug_mode):
     experiment = Experiment.load()
     timestamp = experiment.timestamp
     repeats = experiment.metazoo.repeats
 
-    tmper = idr.identifier_global()
+    myid = idr.identifier_global()
     #  We must wait until the servers make themselves known
     while not fs.isfile(loc.get_cfg_dir(), '.metazoo.cfg'):
         time.sleep(1)
@@ -112,9 +117,9 @@ def run_client(debug_mode):
 
         # Must wait and synchronise with all servers and clients
         
-        if debug_mode: print('Client {} stage PRE_SYNC'.format(tmper), flush=True)
+        if debug_mode: print('Client {} stage PRE_SYNC'.format(myid), flush=True)
         syncer.sync()
-        if debug_mode: print('Client {} stage POST_SYNC'.format(tmper), flush=True)
+        if debug_mode: print('Client {} stage POST_SYNC'.format(myid), flush=True)
         
         executor = cli.boot(config)
         experiment.experiment_client(config, executor, repeat)

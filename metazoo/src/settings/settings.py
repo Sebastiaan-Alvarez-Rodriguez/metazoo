@@ -1,9 +1,16 @@
+# This file contains code to generate a small config file,
+# containing the only stateful data of MetaZoo.
+# 
+# The data stored here should be things we do not want to ask
+# the user every time they use MetaZoo
+
+
 import configparser
 
 import util.ui as ui
 import util.fs as fs
 
-
+# Gets path to config storage location
 def get_metazoo_settings_file():
     return fs.join(fs.abspath(), 'metazoo.cfg')
 
@@ -42,7 +49,7 @@ def write_config(config_loc, key_name, user, metazoo_dir, crawlspace_dir):
     with open(config_loc, 'w') as file:
         parser.write(file)
 
-
+# Change an amount of user settings
 def change_settings():
     if not fs.exists(get_metazoo_settings_file()):
         gen_config(get_metazoo_settings_file())
@@ -64,6 +71,7 @@ def change_settings():
         if ui.ask_bool('Done?'):
             return
 
+# Check if all required data is present in the config
 def validate_settings(config_loc):
     d = dict()
     d['SSH'] = {'key_name', 'user', 'metazoo_dir', 'crawlspace_dir'}
@@ -80,6 +88,12 @@ def validate_settings(config_loc):
 
 
 class SettingsConfig(object):    
+    '''
+    Simple object to quickly interact with stored settings.
+    This way, we don't have to read in the config every time,
+    or pass it along a large amount of times.
+    Below, we define a global instance.
+    '''
     def __init__(self):
         loc = get_metazoo_settings_file()
         if not fs.exists(loc):
@@ -110,6 +124,7 @@ class SettingsConfig(object):
     def remote_crawlspace_dir(self):
         return self.parser['SSH']['crawlspace_dir']
 
+    # Persist current settings
     def persist():
         with open(config_loc, 'w') as file:
             parser.write(file)

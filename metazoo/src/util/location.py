@@ -1,3 +1,7 @@
+# This file contains all relevant paths for MetaZoo to function
+# Here, we chose for a function-call approach instead of
+# a global object, as we don't have to maintain state here.
+
 import util.fs as fs
 from settings.settings import settings_instance as st
 

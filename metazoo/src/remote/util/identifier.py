@@ -1,11 +1,11 @@
 import os
 import socket
-from math import ceil
 
+# Returns number of allocated nodes, as given by the SLURM_NNODES environment variable
 def num_nodes():
     return int(os.environ['SLURM_NNODES'])
 
-# Gives max number of processes per node (e.g. returns 2 if we have 2 servers and 1 client)
+# Returns max number of processes per node (e.g. returns 2 if we have 2 servers and 1 client)
 # Note: Should return 1 if we have 1 server and 2 clients
 def num_procs_per_node():
     return int(os.environ['SLURM_NPROCS']) // num_nodes()
@@ -32,13 +32,13 @@ def __sanity_check(rank):
         raise RuntimeError('Sanity check failed! Expected host {} to have rank in [{}, {}], but found: {}'.format(host, expected_rank_min, expected_rank_max, rank))
     
 
-# Gives a global id, i.e: Different for every process
+# Returns a global id, i.e: Different for every process
 def identifier_global():
     rank = int(os.environ['PRUN_CPU_RANK'])
     __sanity_check(rank)
     return rank
 
-# Gives a local id, i.e: Different between processes on the same node, but potentially equivalent between 2 or more processes
+# Returns a local id, i.e: Different between processes on the same node, but potentially equivalent between 2 or more processes
 def identifier_local():
     # node118 (suppose we are node118/1)
     host = socket.gethostname()

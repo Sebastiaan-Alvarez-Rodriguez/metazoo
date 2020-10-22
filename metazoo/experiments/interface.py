@@ -7,10 +7,10 @@ class ExperimentInterface(metaclass=abc.ABCMeta):
     Experiments must be defined inside this interface.
     MetaZoo dynamically imports and executes it.
 
-    Check <root dir>/metazoo/experiments/example_simple/example.py 
+    Check <root dir>/metazoo/experiments/examples/example_simple.py 
     for an example implementation.
     Also, check <root dir>/metazoo/dynamic/metazoo.py
-    to find out how metazoo variables work.
+    to find out how metazoo works and what it provides.
     '''
     @classmethod
     def __subclasshook__(cls, subclass):
