@@ -1,6 +1,6 @@
 __pycache__/
 /deps/*
-!deps/example_client/
+!deps/killthroughput_client/
 
 /metazoo.cfg
 /.sync/
