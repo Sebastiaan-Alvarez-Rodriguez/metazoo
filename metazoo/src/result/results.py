@@ -32,6 +32,10 @@ def results(parser, args):
         printe('Cannot work with results. Matplotlib is not available!')
         return
 
+    if not importer.library_exists('numpy'):
+        printe('Cannot work with results. Numpy is not available!')
+        return
+
     if args.store and args.type is None:
         parser.error('--store (-st) requires --type (-t)')
         return
