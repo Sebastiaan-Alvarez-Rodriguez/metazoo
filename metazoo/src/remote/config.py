@@ -130,9 +130,6 @@ class ClientConfig(Config):
     def __init__(self, experiment, nodes, hosts):
         super(ClientConfig, self).__init__(experiment, nodes)
         self._hosts = hosts
-        self._log4j_dir = None
-        self._log4j_properties = None
-
 
     @property
     def server_infiniband(self):
@@ -158,21 +155,3 @@ class ClientConfig(Config):
     @property
     def hosts(self):
         return self._hosts
-
-    # Path to directory containing log4j path
-    @property
-    def log4j_dir(self):
-        return self._log4j_dir
-
-    @log4j_dir.setter
-    def log4j_dir(self, value):
-        self._log4j_dir = value
-
-    # Rootlogger properties, e.g. 'INFO, FILE' or 'ERROR, CONSOLE'
-    @property
-    def log4j_properties(self):
-        return self._log4j_properties
-    
-    @log4j_properties.setter
-    def log4j_properties(self, value):
-        self._log4j_properties = value

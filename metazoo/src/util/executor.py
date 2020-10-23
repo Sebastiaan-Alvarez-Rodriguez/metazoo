@@ -81,13 +81,20 @@ class Executor(Synchronized):
     def stop(self):
         if self.started and not self.stopped:
             if self.thread.is_alive():
-                self.process.terminate()
+                #If command fails, or when stopping directly after starting
+                for x in range(5):
+                    if self.process == None:
+                        time.sleep(1)
+                    else:
+                        break
+                if self.process != None:
+                    self.process.terminate()
                 self.thread.join()
                 self.stopped = True
-        return self.process.returncode
+        return self.process.returncode if self.process != None else 1
 
     # Stop and then start wrapped command again
-    # NOTE: This kills current thread, creates new one
+    # Note: This kills current thread, creates new one
     def reboot(self):
         self.stop()
         self.started = False

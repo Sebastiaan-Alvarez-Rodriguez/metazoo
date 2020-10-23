@@ -4,7 +4,7 @@ import threading
 import time
 
 from experiments.interface import ExperimentInterface
-import remote.client as cli
+import remote.util.balancer as balancer
 import util.fs as fs
 import util.location as loc
 from util.printer import *
@@ -51,8 +51,22 @@ class KillThroughputExperiment(ExperimentInterface):
         return 10
 
 
+    # Constructs symlinks in zookeeper-client directory, so classpath resolves to required jars 
+    def _prepare_classpath_symlinks(self):
+        locations = [
+            fs.join(loc.get_build_lib_dir(), 'log4j-1.2.15.jar'),
+            fs.join(loc.get_build_dir(), 'zookeeper-3.3.0.jar'),
+        ]
+
+        fs.mkdir(fs.join(loc.get_metazoo_dep_dir(), 'killthroughput_client'), exist_ok=True)
+        for path in locations:
+            dst = fs.join(loc.get_metazoo_dep_dir(), 'killthroughput_client', fs.basename(path))
+            if not fs.exists(dst):
+                fs.ln(path, dst)
+
+
     def pre_experiment(self, metazoo):
-        cli.prepare_classpath_symlinks()
+        self._prepare_classpath_symlinks()
         '''Execution before experiment starts. Executed on the remote once.'''
         metazoo.register['time'] = 300
         nr_kills = 7
@@ -74,6 +88,17 @@ snapshots and logs grow quickly to terrabyte-scale. Due to storage quota,
 we periodically remove old logs and snapshots.
 Happy experimenting!
 ''')
+
+    def get_client_run_command(self, metazoo):
+        '''Get client run command, executed in All client nodes'''
+        return 'java -Dlog4j.configuration=file:"{}" "-Dprops={}" -jar {} {} {} {}'.format(
+        fs.join(loc.get_client_cfg_dir(), 'log4j.properties'),
+        'ERROR, CONSOLE',
+        fs.join(loc.get_metazoo_dep_dir(), 'example_client', 'zookeeper-client.jar'),
+        balancer.balance_simple(metazoo.hosts, metazoo.gid),
+        metazoo.gid,
+        fs.join(loc.get_node_log_dir(), '{}.log'.format(metazoo.gid)))
+
 
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''

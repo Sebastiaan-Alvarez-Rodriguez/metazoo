@@ -33,7 +33,16 @@ class Syncer(object):
         if self.prime:
             self.serversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             serveraddr = (socket.gethostname(), 5000)
-            self.serversock.bind(serveraddr)
+            for x in range(retries):
+                try:
+                    self.serversock.bind(serveraddr)
+                    break
+                except OSError as e:
+                    if x == 0:
+                        printw('[SYNC] PRIME {}.{} cannot host from address {} (connection refused). Retrying...'.format(designation.upper(), self.gid, serveraddr))
+                    elif x == retries-1:
+                        raise e
+                    time.sleep(1)
             self.serversock.listen(1070) #Get up to 1070 connections before refusing them
             self.expected_connections = experiment.num_servers-1+experiment.num_clients
             self.connections = []
@@ -55,11 +64,11 @@ class Syncer(object):
                     self.sock.connect(addr)
                     break
                 except ConnectionRefusedError as e:
-                    time.sleep(1)
                     if x == 0:
                         printw('[SYNC] {}.{} cannot connect to address {} (connection refused). Retrying...'.format(designation.upper(), self.gid, addr))
                     elif x == retries-1:
                         raise e
+                    time.sleep(1)
 
     # Handle syncinc if we are prime server
     def _handle_sync_prime(self):

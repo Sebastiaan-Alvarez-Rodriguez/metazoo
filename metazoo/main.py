@@ -99,17 +99,20 @@ def exec(repeats, force_comp=False, debug_mode=False):
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
 
-    time_to_reserve = ui.ask_time('How much time to reserve on the cluster for {} repeats?'.format(repeats))
-
     timestamp = tm.ask_timestamp()
+    experiment = exp.get_experiment(timestamp)
+    
+    time_to_reserve = ui.ask_time('''
+How much time to reserve on the cluster for {} {}?
+Note: Prefer reserving more time over getting timeouts.
+'''.format(repeats, 'repeat' if repeats == 1 else 'repeats'))
+
     # Constructs result and log directories
     for x in range(repeats):
         fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x) 
         fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x, 'experiment_logs')
 
-    print('Loading experiment...')
-    experiment = exp.get_experiment(timestamp)
-
+    
     experiment.pre_experiment(repeats)
 
     # Remove stale dirs from previous runs
@@ -230,7 +233,7 @@ def main():
     group.add_argument('--export', help='export only metazoo and script code to the DAS5', action='store_true')
     group.add_argument('--init_internal', help=argparse.SUPPRESS, action='store_true')
     group.add_argument('--init', help='Initialize MetaZoo to run code on the DAS5', action='store_true')
-    group.add_argument('--remote', nargs=1, metavar='repeats', help='execute code on the DAS5 from your local machine')
+    group.add_argument('--remote', nargs='?', const=1, type=int, metavar='repeats', help='execute code on the DAS5 from your local machine')
     group.add_argument('--settings', help='Change settings', action='store_true')
     parser.add_argument('-c', '--force-compile', dest='force_comp', help='Forces to (re)compile Zookeeper, even when build seems OK', action='store_true')
     parser.add_argument('-d', '--debug-mode', dest='debug_mode', help='Run remote in debug mode', action='store_true')
@@ -258,7 +261,7 @@ def main():
     elif args.init:
         init()
     elif args.remote:
-        remote(int(args.remote[0]), force_exp=args.force_exp, force_comp=args.force_comp, debug_mode=args.debug_mode)
+        remote(args.remote, force_exp=args.force_exp, force_comp=args.force_comp, debug_mode=args.debug_mode)
     elif args.settings:
         settings()
 

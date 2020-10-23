@@ -10,7 +10,7 @@ import util.ui as ui
 class Experiment(object):
     '''
     Object to handle communication with user-defined experiment interface
-    All attributes are lazy, so the dynamic code is used minimally.
+    Almost all attributes are lazy, so the dynamic code is used minimally.
     '''
     def __init__(self, timestamp, location, modulename, clazz):
         self.timestamp = timestamp
@@ -95,6 +95,15 @@ class Experiment(object):
         return val
 
 
+    def get_client_run_command(self, config, repeat):
+        self._metazoo._gid = config.gid
+        self._metazoo._lid = config.lid
+        self._metazoo._hosts = tuple(config.hosts)
+        self._metazoo._repeat = repeat
+        self._metazoo._log_location = fs.join(loc.get_metazoo_results_dir(), self.timestamp, repeat, 'experiment_logs')
+        return self.instance.get_client_run_command(self._metazoo)
+
+
     def experiment_client(self, config, executor, repeat):
         self._metazoo._gid = config.gid
         self._metazoo._lid = config.lid
@@ -105,7 +114,7 @@ class Experiment(object):
 
         return self.instance.experiment_client(self._metazoo)
 
-    
+
     def experiment_server(self, config, executor, repeat, is_leader_func):
         self._metazoo._gid = config.gid
         self._metazoo._lid = config.lid

@@ -26,7 +26,7 @@ def run_server(debug_mode):
     config = config_construct_server(experiment)
     srv.populate_config(config, debug_mode)
     if config.gid == 0:
-        print('Network booted. Orchestrator ready!')
+        print('Network booted. Prime ready!')
         with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'w') as file:
             file.write('\n'.join(srv.gen_connectionlist(config, experiment)))
 
@@ -96,18 +96,16 @@ def run_client(debug_mode):
     timestamp = experiment.timestamp
     repeats = experiment.metazoo.repeats
 
-    myid = idr.identifier_global()
     #  We must wait until the servers make themselves known
     while not fs.isfile(loc.get_cfg_dir(), '.metazoo.cfg'):
         time.sleep(1)
-
+    # We read the serverlist
     with open(fs.join(loc.get_cfg_dir(), '.metazoo.cfg'), 'r') as file:
         # <node101>:<clientport1>
         hosts = [line.strip() for line in file.readlines()]
     
     config = config_construct_client(experiment, hosts)
-    cli.populate_config(config, debug_mode)
-    
+
     syncer = Syncer(config, experiment, 'client', debug_mode)
 
     global_status = True
@@ -119,11 +117,11 @@ def run_client(debug_mode):
 
         # Must wait and synchronise with all servers and clients
         
-        if debug_mode: print('Client {} stage PRE_SYNC'.format(myid))
+        if debug_mode: print('Client {} stage PRE_SYNC'.format(idr.identifier_global()))
         syncer.sync()
-        if debug_mode: print('Client {} stage POST_SYNC'.format(myid))
+        if debug_mode: print('Client {} stage POST_SYNC'.format(idr.identifier_global()))
         
-        executor = cli.boot(config)
+        executor = cli.boot(config, experiment, repeat)
         experiment.experiment_client(config, executor, repeat)
         status = cli.stop(executor)
         global_status &= status
@@ -135,7 +133,7 @@ def run_client(debug_mode):
 
         # We log failed executions in a results/<timestamp>/failures.metalog
         if not status:
-            printw('Client {} status in iteration {}/{} not good'.format(config.gid, repeat, repeats-1))
+            printw('Client {} status in iteration {}/{} not good'.format(config.gid, repeat+1, repeats))
             with open(fs.join(loc.get_metazoo_results_dir(), timestamp, 'failures.metalog'), 'a') as file:
                 file.write('server:{}:{}\n'.format(config.gid, repeat))
     syncer.close()

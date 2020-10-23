@@ -22,6 +22,7 @@ class ExperimentInterface(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'clients_core_affinity') and callable(subclass.clients_core_affinity) and 
                 hasattr(subclass, 'server_periodic_clean') and callable(subclass.server_periodic_clean) and
                 hasattr(subclass, 'pre_experiment') and callable(subclass.pre_experiment) and 
+                hasattr(subclass, 'get_client_run_command') and callable(subclass.get_client_run_command) and 
                 hasattr(subclass, 'experiment_client') and callable(subclass.experiment_client) and 
                 hasattr(subclass, 'experiment_server') and callable(subclass.experiment_server) and 
                 hasattr(subclass, 'post_experiment') and callable(subclass.post_experiment) or NotImplemented)
@@ -62,9 +63,15 @@ class ExperimentInterface(metaclass=abc.ABCMeta):
         '''Period in seconds for servers to clean their crawlspaces. 0 means no cleaning'''
         raise NotImplementedError
 
+
     @abc.abstractmethod
     def pre_experiment(self, metazoo):
         '''Execution before experiment starts. Executed on the remote once.'''
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_client_run_command(self, metazoo):
+        '''Get client run command, executed in All client nodes'''
         raise NotImplementedError
 
     @abc.abstractmethod

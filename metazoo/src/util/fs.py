@@ -8,6 +8,8 @@ import os
 import shutil
 import sys
 
+from pathlib import Path
+
 
 def abspath(path=os.path.dirname(sys.argv[0])):
     return os.path.abspath(path)
@@ -46,6 +48,16 @@ def isemptydir(path, *args):
 
 def isfile(path, *args):
     return os.path.isfile(join(path,*args))
+
+# Note: Returns always False on unsupported systems.
+# Note: Be careful: Even if given symlink points to non-existing target, returns True
+def issymlink(path, *args):
+    return os.path.islink(join(path, *args))
+
+# Resolve a symlink. With full_resolve, 
+# we keep following links until we find end destination
+def resolvelink(path, *args, full_resolve=True):
+    return str(Path(join(path, *args)).resolve().absolute()) if full_resolve else os.readlink(join(path, *args))
 
 def join(directory, *args):
     returnstring = directory

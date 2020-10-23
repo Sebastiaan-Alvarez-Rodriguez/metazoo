@@ -1,3 +1,5 @@
+import time
+
 from experiments.interface import ExperimentInterface
 
 # We suggest all experiments which print anything to the console
@@ -53,11 +55,17 @@ class ExampleExperiment(ExperimentInterface):
         if metazoo.gid == None and metazoo.lid == None:
             print('I cannot use gid and lid here yet!')
 
+
+    def get_client_run_command(self, metazoo):
+        '''Get client run command, executed in All client nodes'''
+        return 'while :; do echo "I am a running client"; sleep 20; done'
+
+
     def experiment_client(self, metazoo):
         '''Execution occuring on ALL client nodes'''
         print('Hello from client with gid={}. I am told these hosts exist: {}'.format(metazoo.gid, metazoo.hosts))
         time.sleep(5)
-        print('I (client {}:{})) slept well. Pre-experiment says "{}" with secret code {}. Goodbye!'.format(
+        print('I (client {}:{}) slept well. Pre-experiment says "{}" with secret code {}. Goodbye!'.format(
             metazoo.gid,
             metazoo.lid,
             metazoo.register['a_key'],
@@ -71,9 +79,11 @@ class ExampleExperiment(ExperimentInterface):
             metazoo.register['secret'] = -1
         except Exception as e:
             print('Turns out I (server {}) cannot add or change or delete variables after pre_experiment. Goodbye!'.format(metazoo.id))
-
+        time.sleep(5)
+        print('I (server {}:{}) slept well. Goodbye!'.format(
+            metazoo.gid,
+            metazoo.lid))
 
     def post_experiment(self, metazoo):
         '''get amount of client nodes to allocate'''
-
         print('Experiments are done. Pre-experiment had this secret: {}'.format(metazoo.register['secret']))

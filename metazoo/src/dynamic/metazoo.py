@@ -96,16 +96,37 @@ class MetaZoo(object):
 
 
     # Function to completely prohibit changing (i.e. writing, updating, deleting) MetaZoo register
-    def lock():
+    def lock(self):
         def __readonly__(self, *args, **kwargs):
             raise RuntimeError('Cannot change MetaZoo register past the pre_experiment stage')
-        self.register.__setitem__ = __readonly__
-        self.register.__delitem__ = __readonly__
-        self.register.pop = __readonly__
-        self.register.popitem = __readonly__
-        self.register.clear = __readonly__
-        self.register.update = __readonly__
-        self.register.setdefault = __readonly__
+        try:
+            self.register.__setitem__ = __readonly__
+        except Exception as e:
+            pass
+        try:
+            self.register.__delitem__ = __readonly__
+        except Exception as e:
+            pass
+        try:
+            self.register.pop = __readonly__
+        except Exception as e:
+            pass
+        try:
+            self.register.popitem = __readonly__
+        except Exception as e:
+            pass
+        try:
+            self.register.clear = __readonly__
+        except Exception as e:
+            pass
+        try:
+            self.register.update = __readonly__
+        except Exception as e:
+            pass
+        try:
+            self.register.setdefault = __readonly__
+        except Exception as e:
+            pass
         del __readonly__
 
 
@@ -127,7 +148,9 @@ class MetaZoo(object):
             raise RuntimeError('Temporary state file not found at {}'.format(location))
         with open(location, 'rb') as file:
             try:
-                return pickle.load(file)
+                obj = pickle.load(file)
+                obj.lock()
+                return obj
             except Exception as e:
                 printe('Could not load register. Did you store any Objects that cannot be pickled in the MetaZoo register?')
                 raise e
