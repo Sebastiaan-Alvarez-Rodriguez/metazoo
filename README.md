@@ -28,12 +28,25 @@ You only have to call `--init` once (although calling it multiple times causes n
 ### Running
 After initializattion, we run 
 ```bash
-python3 <project root>/metazoo/main.py --remote <repeats>
+python3 <project root>/metazoo/main.py --remote <optional repeats>
 ```
 Here, `--remote` tells MetaZoo we want to execute on the remote cluster.
 MetaZoo will not re-export files, and neither will it re-compile Zookeeper.
+Use the `-e` flag to force-export from your local machine, and the `-c` flag to force-(re)compile on the remote.
 You will be asked a few important questions, and then the cluster will be deployed.
 
+
+#### Running for a long time
+When experiments have to run for many hours, you of course do not want to control the remote cluster from your local device, because you would need to leave your local device on for the entire duration of the experiment.
+Use:
+```bash
+ssh <ssh_key for remote>
+tmux
+python3 </path/to/metazoo/main.py> --exec <repeats>
+```
+This way, MetaZoo commands from the remote in a tmux instance.
+You can safely press `ctrl+B` `D` to exit tmux.
+Now you can logout and shutdown your local machine without interrupting your experiment.
 ___
 
 Use:
