@@ -1,10 +1,11 @@
 __pycache__/
+/deps/*
+!/deps/faulttolerance_client/
+
 /metazoo.cfg
 /.sync/
+
 /results/
 /graphs/
 *.jar
-
-/deps/*
-!deps/example_client/
-!deps/faulttolerance_client/zookeeper-client.jar
+!/deps/faulttolerance_client/zookeeper-client.jar
