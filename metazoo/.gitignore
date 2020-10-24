@@ -2,7 +2,6 @@ __pycache__/
 /deps/*
 !/deps/faulttolerance_client/
 
-
 /metazoo.cfg
 /.sync/
 

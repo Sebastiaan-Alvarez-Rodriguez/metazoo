@@ -130,12 +130,14 @@ initLimit={}
 syncLimit={}
 dataDir={}
 clientPort={}
+globalOutstandingLimit={}
 {}'''.format(
     ticktime,
     initlimit,
     synclimit,
     config.datadir,
     clientport,
+    250,
     '\n'.join(gen_serverlist(config)))
 
     with open(fs.join(loc.get_cfg_dir(), '{}.cfg'.format(config.gid)), 'w') as file:
