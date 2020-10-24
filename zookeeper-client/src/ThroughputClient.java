@@ -64,12 +64,12 @@ public class ThroughputClient {
         try {
             nodes.delete(node_name);
             conn.close();
-        } catch (Exception e) {
-            LOG.error(e.getMessage());
+        } catch (Exception ignored) {
+            //LOG.error(e.getMessage());
         }
         try {
-            FileWriter writer = new FileWriter(logfile);
-            writer.write("ops: "+operations+"\n");
+            FileWriter writer = new FileWriter(logfile, true);
+            writer.write(NR_READS +","+operations+"\n");
             writer.close();
         } catch (IOException ignored) {
             //LOG.error(e.getMessage());
@@ -89,11 +89,11 @@ public class ThroughputClient {
         operations = 0;
         conn = new ZooKeeperConnection();
         try {
-            LOG = Logger.getLogger(FailureClient.class);
+            LOG = Logger.getLogger(ThroughputClient.class);
             node_name = "/ClientNode" + id;
             String message = "I am Client"+ id;
             LOG.warn(message);
-            Runtime.getRuntime().addShutdownHook(new Thread(FailureClient::shutdown));
+            Runtime.getRuntime().addShutdownHook(new Thread(ThroughputClient::shutdown));
             ZooKeeper zoo = conn.connect(host);
             nodes = new ZnodeManager(zoo);
             run();
