@@ -6,17 +6,19 @@ import util.fs as fs
 
 class Reader(object):
     '''
-    Object to read killthroughput data from a path
+    Object to read faulttolerance data from a path
     Expects a path with files '0.log', '1.log', ....
     Reader is ignorant of all other files and directories
     '''
     def __init__(self, path):
         if not fs.isdir(path):
-            raise RuntimeError('Cannot read killthroughput from path "{}"'.format(path))
+            raise RuntimeError('Cannot read faulttolerance from path "{}"'.format(path))
         # Match all files with name '<number>.log', store as full path
         self.files = [x for x in fs.ls(path, only_files=True, full_paths=True) if x.endswith('.log') and fs.basename(x).split('.')[-2].isnumeric()]
         # Sort filelist on client global numbers
         self.files.sort(key=lambda x: int(fs.basename(x).split('.')[-2]))
+        if self.num_files == 0:
+            raise RuntimeError('Cannot find any files on path "{}"'.format(path))
 
 
     # Lazily read and return operations as they are needed

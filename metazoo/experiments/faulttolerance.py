@@ -10,7 +10,7 @@ import util.location as loc
 from util.printer import *
 import util.time as tm
 
-class KillThroughputExperiment(ExperimentInterface):
+class FaultToleranceExperiment(ExperimentInterface):
     '''
     Experiment measuring throughput performance of saturated servers
     as server nodes get killed
@@ -58,9 +58,9 @@ class KillThroughputExperiment(ExperimentInterface):
             fs.join(loc.get_build_dir(), 'zookeeper-3.3.0.jar'),
         ]
 
-        fs.mkdir(fs.join(loc.get_metazoo_dep_dir(), 'killthroughput_client'), exist_ok=True)
+        fs.mkdir(fs.join(loc.get_metazoo_dep_dir(), 'faulttolerance_client'), exist_ok=True)
         for path in locations:
-            dst = fs.join(loc.get_metazoo_dep_dir(), 'killthroughput_client', fs.basename(path))
+            dst = fs.join(loc.get_metazoo_dep_dir(), 'faulttolerance_client', fs.basename(path))
             if not fs.exists(dst):
                 fs.ln(path, dst)
 
