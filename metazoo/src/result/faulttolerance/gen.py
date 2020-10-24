@@ -62,12 +62,13 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype):
     #     event = [frame[i] for i in range(i - radius, i + radius)]
     #     ax.plot([x*0.3 for x in range(-radius, radius)], event, color='tab:red')
 
-    x_points = [x*0.3 for x in range(-radius, radius)]
-    
-    ax.plot(x_points, med_leader, color='tab:red')
-    ax.vlines(x_points, low_leader, up_leader, color='tab:red', alpha=0.6, zorder=0)
-    ax.plot(x_points, med_follower, color='tab:green')
-    ax.vlines(x_points, low_follower, up_follower, color='tab:green', alpha=0.6, zorder=0)
+    x_points = [x*log_time for x in range(-radius, radius)]
+
+    ax.plot(x_points, (1/log_time)*np.array(med_leader), color='tab:red')
+    ax.vlines(x_points, (1/log_time)*np.array(low_leader), (1/log_time)*np.array(up_leader), color='tab:red', alpha=0.6, zorder=0)
+    ax.plot(x_points, (1/log_time)*np.array(med_follower), color='tab:green')
+    ax.vlines(x_points, (1/log_time)*np.array(low_follower), (1/log_time)*np.array(up_follower), color='tab:green', alpha=0.6, zorder=0)
+    ax.set(xlabel='Time (seconds)', ylabel='Operations per Second', title='Operations per second around Kill Events')
 
 
     # ax.plot([x*0.3 for x in range(len(frame))], frame, color='tab:blue')
