@@ -37,6 +37,11 @@ def run_server(debug_mode):
     # All servers must write their myid file
     srv.prepare_datadir(config)
 
+    # If cleaning is requested, boot cleaner service
+    if experiment.server_periodic_clean > 0:
+        clean_repeater = Repeater(lambda: srv.clean_data(config), experiment.server_periodic_clean)
+        clean_repeater.start()
+
     global_status = True
     for repeat in range(repeats):
 
@@ -52,20 +57,10 @@ def run_server(debug_mode):
 
         local_log = fs.join(loc.get_node_log_dir(), 'server{}.log'.format(config.gid))
         executor = srv.boot(config, local_log)
-        
-        # If cleaning is requested, boot cleaner service
-        if experiment.server_periodic_clean > 0:
-            clean_repeater = Repeater(lambda: srv.clean_data(config), experiment.server_periodic_clean)
-            clean_repeater.start()
-
 
         experiment.experiment_server(config, executor, repeat, lambda: srv.is_leader(local_log))
         status = srv.stop(executor)
         
-        # If cleaning is requested, stop cleaner service
-        if experiment.server_periodic_clean > 0:
-            clean_repeater.stop()
-
         global_status &= status
 
         # Write server log to zookeeper/metazoo/results/<repeat>/
@@ -80,6 +75,10 @@ def run_server(debug_mode):
             printw('Server {} status in iteration {}/{} not good'.format(config.gid, repeat, repeats-1))
             with open(fs.join(loc.get_metazoo_results_dir(), timestamp, 'failures.metalog'), 'a') as file:
                 file.write('server:{}:{}\n'.format(config.gid, repeat))
+
+    # If cleaning is requested, stop cleaner service
+    if experiment.server_periodic_clean > 0:
+        clean_repeater.stop()
 
     syncer.close()
 
