@@ -6,6 +6,7 @@ import sys
 
 import util.fs as fs
 import util.location as loc
+import util.importer as importer
 from util.printer import *
 
 
@@ -13,7 +14,7 @@ from util.printer import *
 def subparser(registrar):
     resultparser = registrar.add_parser('results', help='Build all kinds of graphs (use results -h to see more...)')
     group = resultparser.add_mutually_exclusive_group()
-    group.add_argument('-kt', '--kill-throughput', nargs=1, metavar='timestamp', dest='killthroughput', help='Build kill_throughput graph, reading from metazoo/results/<timestamp>')
+    group.add_argument('-kt', '--kill-throughput', nargs=1, metavar='timestamp', dest='faulttolerance', help='Build kill_throughput graph, reading from metazoo/results/<timestamp>')
     resultparser.add_argument('-l', '--large', help='Forces to generate large graphs, with large text', action='store_true')
     resultparser.add_argument('-ns', '--no-show', dest='no_show', help='Do not show generated graph (useful on servers without xorg forwarding)', action='store_true')
     resultparser.add_argument('-s', '--store', help='Store generated graph (in /metazoo/graphs/<graph_name>/<timestamp>.<type>)', action='store_true')
@@ -22,7 +23,7 @@ def subparser(registrar):
 # Return True if we found arguments used from this subparser, False otherwise
 # We use this to redirect command parse output to this file, results() function 
 def result_args_set(args):
-    return hasattr(args, 'killthroughput')
+    return hasattr(args, 'faulttolerance')
 
 # Processing of result commandline args occurs here
 def results(parser, args):
@@ -47,6 +48,6 @@ def results(parser, args):
     if not fs.isdir(loc.get_metazoo_results_dir()):
         printe('[FAILURE] You have no experiment results directory "{}". Run experiments to get some data first.'.format(log.get_metazoo_results_dir()))
     fargs = [args.large, args.no_show, args.store, args.type]
-    if args.killthroughput:
-        import result.killthroughput.gen as kgen
-        kgen.killthroughput(args.killthroughput[0], *fargs)
+    if args.faulttolerance:
+        import result.faulttolerance.gen as kgen
+        kgen.faulttolerance(args.faulttolerance[0], *fargs)
