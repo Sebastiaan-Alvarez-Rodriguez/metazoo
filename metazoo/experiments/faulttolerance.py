@@ -12,7 +12,7 @@ import util.time as tm
 
 class FaultToleranceExperiment(ExperimentInterface):
     '''
-    Experiment measuring throughput performance of saturated servers
+    Experiment measuring operations per 0.3 second of saturated servers
     as server nodes get killed
     '''
     def num_servers(self):
