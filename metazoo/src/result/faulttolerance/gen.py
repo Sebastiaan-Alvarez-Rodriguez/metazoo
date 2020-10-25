@@ -18,7 +18,7 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype, original):
     nap_time = time / (nr_kills+1)        # Amount of seconds between every 2 kills
 
     if large: 
-        fontsize = 16
+        fontsize = 24
         font = {
             'family' : 'DejaVu Sans',
             'weight' : 'bold',
@@ -98,15 +98,15 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype, original):
         ax.vlines(x_points, (1/log_time)*np.array(low_follower), (1/log_time)*np.array(up_follower), color='tab:green', alpha=0.6, zorder=0)
         ax.set(xlabel='Time (seconds)', ylabel='Operations per Second', title='Operations per second around Kill Events')
 
-        prop = {}
         if large:
-            prop = {'size': 13}
-
-        ax.legend(loc='lower right', prop=prop, frameon=False)
+            ax.legend(loc='lower right', fontsize=18, frameon=False)
+        else:
+            ax.legend(loc='lower right', frameon=False)
+    
+    if large:
+        fig.set_size_inches(10, 8)
 
     fig.tight_layout()
-    if large:
-        fig.set_size_inches(8, 6)
 
     if store_fig:
        storer.store('faulttolerance', logdir, filetype, plt)

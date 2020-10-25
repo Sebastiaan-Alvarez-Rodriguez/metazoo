@@ -6,7 +6,7 @@ class Assembler(object):
         if not fs.isdir(path):
             raise RuntimeError('Cannot read logs from path "{}"'.format(path))
         if not fs.isdir(fs.join(path, 0)):
-            raise RuntimeError('Did not find experiments in given path "{}"').format(path)
+            raise RuntimeError('Did not find experiments in given path "{}"'.format(path))
         self._path = path
 
     def read_ops(self):
