@@ -19,6 +19,7 @@ def subparser(registrar):
     resultparser.add_argument('-ns', '--no-show', dest='no_show', help='Do not show generated graph (useful on servers without xorg forwarding)', action='store_true')
     resultparser.add_argument('-s', '--store', help='Store generated graph (in /metazoo/graphs/<graph_name>/<timestamp>.<type>)', action='store_true')
     resultparser.add_argument('-t', '--type', nargs=1, help='Preferred storage type (default=pdf)', default='pdf')
+    resultparser.add_argument('-o', '--original', help='Plot results in the same way as original authors', action='store_true')
 
 # Return True if we found arguments used from this subparser, False otherwise
 # We use this to redirect command parse output to this file, results() function 
@@ -47,7 +48,7 @@ def results(parser, args):
 
     if not fs.isdir(loc.get_metazoo_results_dir()):
         printe('[FAILURE] You have no experiment results directory "{}". Run experiments to get some data first.'.format(log.get_metazoo_results_dir()))
-    fargs = [args.large, args.no_show, args.store, args.type]
+    fargs = [args.large, args.no_show, args.store, args.type, args.original]
     if args.faulttolerance:
         import result.faulttolerance.gen as kgen
         kgen.faulttolerance(args.faulttolerance[0], *fargs)
