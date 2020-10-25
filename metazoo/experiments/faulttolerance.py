@@ -17,7 +17,7 @@ class FaultToleranceExperiment(ExperimentInterface):
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
-        return 13
+        return 7
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
