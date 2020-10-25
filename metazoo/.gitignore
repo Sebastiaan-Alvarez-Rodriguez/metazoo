@@ -1,7 +1,7 @@
 __pycache__/
 /deps/*
 !/deps/faulttolerance_client/
-
+!/deps/throughput_client/
 
 /metazoo.cfg
 /.sync/
@@ -10,3 +10,4 @@ __pycache__/
 /graphs/
 *.jar
 !/deps/faulttolerance_client/zookeeper-client.jar
+!/deps/throughput_client/zookeeper-client.jar

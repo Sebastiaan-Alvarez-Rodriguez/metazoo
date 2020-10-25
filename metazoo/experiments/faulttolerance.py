@@ -12,12 +12,12 @@ import util.time as tm
 
 class FaultToleranceExperiment(ExperimentInterface):
     '''
-    Experiment measuring throughput performance of saturated servers
+    Experiment measuring operations per 0.3 second of saturated servers
     as server nodes get killed
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
-        return 13
+        return 7
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
@@ -94,7 +94,7 @@ Happy experimenting!
         return 'java -Dlog4j.configuration=file:"{}" "-Dprops={}" -jar {} {} {} {}'.format(
         fs.join(loc.get_client_cfg_dir(), 'log4j.properties'),
         'ERROR, CONSOLE',
-        fs.join(loc.get_metazoo_dep_dir(), 'killthroughput_client', 'zookeeper-client.jar'),
+        fs.join(loc.get_metazoo_dep_dir(), 'faulttolerance_client', 'zookeeper-client.jar'),
         balancer.balance_simple(metazoo.hosts, metazoo.gid),
         metazoo.gid,
         fs.join(loc.get_node_log_dir(), '{}.log'.format(metazoo.gid)))
