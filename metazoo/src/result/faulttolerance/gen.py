@@ -17,6 +17,15 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype, original):
     nr_kills = 7
     nap_time = time / (nr_kills+1)        # Amount of seconds between every 2 kills
 
+    if large: 
+        fontsize = 16
+        font = {
+            'family' : 'DejaVu Sans',
+            'weight' : 'bold',
+            'size'   : fontsize
+        }
+        plt.rc('font', **font)        
+
     if original:
         path = fs.join(loc.get_metazoo_results_dir(), logdir)
         run = next(fs.ls(path, only_dirs=True, full_paths=True))
@@ -83,16 +92,27 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype, original):
 
         x_points = [x*log_time for x in range(-radius, radius)]
 
-        ax.plot(x_points, (1/log_time)*np.array(med_leader), color='tab:red')
+        ax.plot(x_points, (1/log_time)*np.array(med_leader), color='tab:red', label='event: kill leader')
         ax.vlines(x_points, (1/log_time)*np.array(low_leader), (1/log_time)*np.array(up_leader), color='tab:red', alpha=0.6, zorder=0)
-        ax.plot(x_points, (1/log_time)*np.array(med_follower), color='tab:green')
+        ax.plot(x_points, (1/log_time)*np.array(med_follower), color='tab:green', label='event: kill follower')
         ax.vlines(x_points, (1/log_time)*np.array(low_follower), (1/log_time)*np.array(up_follower), color='tab:green', alpha=0.6, zorder=0)
         ax.set(xlabel='Time (seconds)', ylabel='Operations per Second', title='Operations per second around Kill Events')
 
+        prop = {}
+        if large:
+            prop = {'size': 13}
+
+        ax.legend(loc='lower right', prop=prop, frameon=False)
+
     fig.tight_layout()
+    if large:
+        fig.set_size_inches(8, 6)
 
     if store_fig:
        storer.store('faulttolerance', logdir, filetype, plt)
+
+    if large:
+        plt.rcdefaults()
 
     if not no_show:
         plt.show()
