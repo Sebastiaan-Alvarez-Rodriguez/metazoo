@@ -14,11 +14,11 @@ class ThroughputExperiment(ExperimentInterface):
     '''
     def num_servers(self):
         '''Get amount of server nodes to allocate'''
-        return 3
+        return 5
 
     def num_clients(self):
         '''get amount of client nodes to allocate'''
-        return 10
+        return 256
 
     def servers_use_infiniband(self):
         '''True if servers must communicate with eachother over infiniband, False otherwise'''
@@ -34,7 +34,7 @@ class ThroughputExperiment(ExperimentInterface):
 
     def clients_core_affinity(self):
         '''Amount of client processes which may be mapped on the same physical node'''
-        return 5
+        return 8
 
     def server_periodic_clean(self):
         '''Period in seconds for servers to clean their crawlspaces. 0 means no cleaning'''
