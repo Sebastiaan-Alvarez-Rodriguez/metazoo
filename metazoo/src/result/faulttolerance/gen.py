@@ -41,9 +41,10 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype, original):
         ax.plot([x*0.3 for x in range(len(frame))], frame, color='tab:blue')
         killpoints_leader = [(1+x)*nap_time for x in range(nr_kills) if leader_kills[x]]
         killpoints_follower = [(1+x)*nap_time for x in range(nr_kills) if not leader_kills[x]]
-        ax.scatter(killpoints_leader, [frame[int(x*(1.0/0.3))] for x in killpoints_leader], color='tab:red', marker='o', s=400)
-        ax.scatter(killpoints_follower, [frame[int(x*(1.0/0.3))] for x in killpoints_follower], color='tab:green', marker='o', s=400)
+        ax.scatter(killpoints_leader, [frame[int(x*(1.0/0.3))] for x in killpoints_leader], color='tab:red', marker='o', s=400, label='event: Leader Kill')
+        ax.scatter(killpoints_follower, [frame[int(x*(1.0/0.3))] for x in killpoints_follower], color='tab:green', marker='o', s=400, label='event: Follower Kill')
         ax.set(xlabel='Time (seconds)', ylabel='Operations per Second', title='Operations per second around Kill Events')
+        ax.legend()
 
     else:
         assembler = Assembler(fs.join(loc.get_metazoo_results_dir(), logdir))

@@ -10,6 +10,7 @@ import util.fs as fs
 import util.location as loc 
 from util.printer import *
 
+
 def throughput(logdir, large, no_show, store_fig, filetype, original):
     seconds = 5
     path = fs.join(loc.get_metazoo_results_dir(), logdir)
@@ -39,15 +40,14 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
             ax.plot([x for x,_ in server], [x/seconds for _, x in server], color=color, linestyle=linestyle, label='{} servers'.format(i))
         prop = {}
         if large:
-            prop = {'size': 13}
-        ax.set_ylim([0,300000])
+            prop = {'size': 20}
+        ax.set_ylim([0,400000])
         ax.legend(loc='upper left', prop=prop, frameon=False)
         ax.set(xlabel='Read Ratio', ylabel='Operations per Second', title='Throughput')
 
     else:  
         assembler = Assembler(path)
         frames = [(x[0][0], [n for _, n in x]) for x in zip(*list(assembler.read_ops()))]
-        
         percentiles = [1, 25, 50, 75, 99]
         print('Horizontal: percentiles\nVertical: Read ratios')
         with table_open(len(percentiles)+1) as table:

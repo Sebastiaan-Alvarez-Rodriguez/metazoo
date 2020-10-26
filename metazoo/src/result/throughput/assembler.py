@@ -1,5 +1,6 @@
 from result.throughput.reader import Reader
 import util.fs as fs
+from collections import Counter
 
 class Assembler(object):
     def __init__(self, path):
