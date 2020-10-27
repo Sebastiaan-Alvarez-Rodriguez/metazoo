@@ -1,3 +1,5 @@
+# This file contains a fast log reader for increasing log numbers
+
 import util.fs as fs 
 
 class Reader(object):

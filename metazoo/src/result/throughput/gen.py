@@ -11,8 +11,9 @@ import util.location as loc
 from util.printer import *
 
 
+# We process throughput experiment results here
 def throughput(logdir, large, no_show, store_fig, filetype, original):
-    seconds = 5
+    seconds = 5     #Amount of seconds client runs each run, for each read ratio
     path = fs.join(loc.get_metazoo_results_dir(), logdir)
 
     if large: 
@@ -25,11 +26,13 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
         plt.rc('font', **font)
 
 
+    #Do we want to process the results according to original experiment? (1 run)
     if original:
         runs = sorted(list(fs.ls(path, only_dirs=True, full_paths=True)), key=lambda x: int(fs.basename(x).split('_')[1]))
         servers = []
         for run in runs:
             reader = Reader(fs.join(run, '0'))
+            #retrieve throughput (read-ratio, total_throughtput) for each server
             servers.append([(x[0][0], sum(n for _, n in x)) for x in zip(*[reader.read_ops(x) for x in range(reader.num_files)])])
 
         fig, ax = plt.subplots()
@@ -41,7 +44,7 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
         prop = {}
         if large:
             prop = {'size': 20}
-        #ax.set_ylim([0,400000])
+        ax.set_ylim([0,400000])
         ax.legend(loc='upper left', prop=prop, frameon=False)
         ax.set(xlabel='Read Ratio', ylabel='Operations per Second', title='Throughput')
         xticks = [int(x) for x,_ in servers[0]]
@@ -53,6 +56,7 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
 
     else:  
         assembler = Assembler(path)
+        #retrieve throughput (read-ratio, total_throughput)
         frames = [(x[0][0], [n for _, n in x]) for x in zip(*list(assembler.read_ops()))]
         percentiles = [1, 25, 50, 75, 99]
         print('Horizontal: percentiles\nVertical: Read ratios')

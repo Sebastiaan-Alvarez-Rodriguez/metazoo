@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+//class to manage a Zookeeper znode.
+//does not include all functionalities
 public class ZnodeManager {
 	private static ZooKeeper zoo;
 

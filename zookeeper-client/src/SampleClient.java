@@ -1,3 +1,5 @@
+// This is a Sample Client to show how we can interact with Zookeeper.
+// For more information:
 // https://www.tutorialspoint.com/zookeeper/zookeeper_api.htm
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.KeeperException;

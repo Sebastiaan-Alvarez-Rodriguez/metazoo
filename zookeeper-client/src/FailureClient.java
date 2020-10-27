@@ -10,6 +10,10 @@ import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
+//a Zookeeper client to test the fault-tolerance of a Zookeeper cluster
+//for a fixed read/write (70/30) ratio
+//does not quit automatically
 public class FailureClient {
     private static ZnodeManager nodes;
     private static int operations;
@@ -32,6 +36,7 @@ public class FailureClient {
            if (!nodes.exists(node_name))
                nodes.create(node_name, data);
 
+           //if read request succeeded, resend the request
            class MyDataCallback implements AsyncCallback.DataCallback {
                @Override
                public void processResult(int rc, String path, Object ctx, byte[] data, Stat stat) {
@@ -40,6 +45,7 @@ public class FailureClient {
                }
            }
 
+           //if write request succeeded, resend the request
            class MyStatCallback implements AsyncCallback.StatCallback {
                @Override
                public void processResult(int rc, String path, Object ctx, Stat stat) {
@@ -55,6 +61,7 @@ public class FailureClient {
            MyDataCallback db = new MyDataCallback();
            MyStatCallback sb = new MyStatCallback();
 
+           //log the operations for each 300ms
            timer = new Timer();
            timer.scheduleAtFixedRate(new TimerTask() {
                @Override
@@ -73,6 +80,7 @@ public class FailureClient {
            while (true) ;
     }
 
+    //if client gets killed, do a clean-up and log the last operations
     public static void shutdown() {
         try {
             nodes.delete(node_name);

@@ -7,6 +7,8 @@ import org.apache.zookeeper.data.Stat;
 import java.io.FileWriter;
 import java.io.IOException;
 
+//a Zookeeper client to test the throughput of a Zookeeper cluster
+//does not quit automatically
 public class ThroughputClient {
     private static String logfile;
     private static int operations;
@@ -28,6 +30,7 @@ public class ThroughputClient {
         if (!nodes.exists(node_name))
             nodes.create(node_name, data);
 
+        //if read request succeeded, resend the request
         class MyDataCallback implements AsyncCallback.DataCallback {
             @Override
             public void processResult(int rc, String path, Object ctx, byte[] data, Stat stat) {
@@ -36,6 +39,7 @@ public class ThroughputClient {
             }
         }
 
+        //if write request succeeded, resend the request
         class MyStatCallback implements AsyncCallback.StatCallback {
             @Override
             public void processResult(int rc, String path, Object ctx, Stat stat) {
@@ -60,6 +64,7 @@ public class ThroughputClient {
         while (true) ;
     }
 
+    //if client gets killed, do a clean-up and log all counted operations (by appending)
     public static void shutdown() {
         try {
             nodes.delete(node_name);

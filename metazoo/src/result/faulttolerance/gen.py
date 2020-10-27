@@ -26,11 +26,16 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype, original):
         }
         plt.rc('font', **font)        
 
+    #Do we want to process the results according to original experiment? (1 run)
     if original:
         path = fs.join(loc.get_metazoo_results_dir(), logdir)
+        
+        #Get only one file, ignore all others
         run = next(fs.ls(path, only_dirs=True, full_paths=True))
         reader = Reader(run)
         identifier = Identifier(get_kill_logs(run))
+
+        # Reads all log files, and adds numbers from same timestamps together in a handy one-liner
         frame = [sum(x) for x in zip_longest(*[reader.read_ops(x) for x in range(reader.num_files)], fillvalue=0)]
         leader_kills = identifier.identify_leaders()
 
@@ -49,7 +54,6 @@ def faulttolerance(logdir, large, no_show, store_fig, filetype, original):
     else:
         assembler = Assembler(fs.join(loc.get_metazoo_results_dir(), logdir))
 
-        # Reads all log files, and adds numbers from same timestamps together in a handy one-liner
         frames = list(assembler.read_ops())
         leader_kills = list(assembler.identify_leaders())
 
