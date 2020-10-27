@@ -45,7 +45,7 @@ class ThroughputExperiment(ExperimentInterface):
         return 8
 
     def get_read_ratios(self):
-        return ['0', '25', '50', '75', '100']    
+        return ['0', '25', '50', '75', '90', '100']    
 
     def get_run_command(self, metazoo, i):
         return 'java -Dlog4j.configuration=file:"{}" "-Dprops={}" -jar {} {} {} {} {}'.format(
