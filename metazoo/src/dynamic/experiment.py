@@ -1,4 +1,5 @@
 import inspect
+import sys
 
 from dynamic.metazoo import MetaZoo
 from experiments.interface import ExperimentInterface
@@ -7,15 +8,15 @@ import util.importer as imp
 import util.location as loc
 import util.ui as ui
 
+
 class Experiment(object):
     '''
     Object to handle communication with user-defined experiment interface
     Almost all attributes are lazy, so the dynamic code is used minimally.
     '''
-    def __init__(self, timestamp, location, modulename, clazz):
+    def __init__(self, timestamp, location, clazz):
         self.timestamp = timestamp
         self.location = location
-        self.modulename = modulename
         self.instance = clazz()
         self._metazoo = MetaZoo()
         self._num_servers = None
@@ -135,14 +136,14 @@ class Experiment(object):
         self._metazoo.persist()
         fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), ignore_errors=True)
         with open(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), 'w') as file:
-            file.write('{}|{}|{}'.format(self.timestamp, self.location, self.modulename))
+            file.write('{}|{}'.format(self.timestamp, self.location))
 
     # Construct object from persisted information
     @staticmethod
     def load():
         with open(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), 'r') as file:
-            timestamp, location, modulename = file.read().split('|')
-            exp = get_experiment(timestamp, location=location, modulename=modulename)
+            timestamp, location = file.read().split('|')
+            exp = load_experiment(timestamp, location)
             exp._metazoo = MetaZoo.load()
             return exp
 
@@ -151,32 +152,35 @@ class Experiment(object):
         fs.rm(fs.join(loc.get_metazoo_experiment_dir(), '.elected.hidden'), ignore_errors=True)
         self._metazoo.clean()
 
-# Standalone function to get an experiment instance
-def get_experiment(timestamp, location=None, modulename=None):
-    if location and modulename:
-        for name, obj in inspect.getmembers(imp.import_full_path(location)):
-            if name == modulename and inspect.isclass(obj) and issubclass(obj, ExperimentInterface):
-                return Experiment(timestamp, location, modulename, obj)
-        raise RuntimeError('Could not fetch module "{}" in file {}'.format(modulename, location))
 
+# Loads an experiment in the node stage
+def load_experiment(timestamp, location):
+    module = imp.import_full_path(location)
+    try:
+        return Experiment(timestamp, location, module.get_experiment())
+    except AttributeError as e:
+        raise RuntimeError('Could not fetch Experiment module in file {}. Did you define get_experiment() there?'.format(location))
+
+
+# Standalone function to get an experiment instance
+def get_experiments(timestamp):
+  
     candidates = []
     for item in fs.ls(loc.get_metazoo_experiment_dir(), full_paths=True, only_files=True):
-        if  item.endswith(fs.join(fs.sep(), 'interface.py')) or not item.endswith('.py'):
+        if item.endswith(fs.join(fs.sep(), 'interface.py')) or not item.endswith('.py'):
             continue
 
-        module = imp.import_full_path(item)
-        for name, obj in inspect.getmembers(module):
-            if inspect.isclass(obj) and issubclass(obj, ExperimentInterface):
-                candidates += ((item, name, obj),)
-
-    for idx, x in enumerate(candidates):
-        if x[2] == ExperimentInterface:
-           del candidates[idx]
+        try:
+            module = imp.import_full_path(item)
+            candidates.append((item, module.get_experiment(),))
+        except AttributeError:
+            print('Item had no get_experiment(): {}'.format(item))
 
     if len(candidates) == 0:
         raise RuntimeError('Could not find a subclass of "ExperimentInterface" in directory {}. Make a ".py" file there, with a class extending "ExperimentInterface". See the example implementation for more details.'.format(loc.get_metazoo_experiment_dir()))
     elif len(candidates) == 1:
-        return Experiment(timestamp, (candidates[0])[0], (candidates[0])[1], (candidates[0])[2])
+        return [Experiment(timestamp, candidates[0][0], candidates[0][1])]
     else:
-        idx = ui.ask_pick('Multiple suitable experiments found. Please pick an experiment:', [x[0] for x in candidates])
-        return Experiment(timestamp, (candidates[idx])[0], (candidates[idx])[1], (candidates[idx])[2])
+        idcs = ui.ask_pick_multiple('Multiple suitable experiments found. Please pick experiments:', [x[0] for x in candidates])
+        print('You picked: {}'.format(idcs))
+        return [Experiment(timestamp+'_'+str(idx), (candidates[x])[0], (candidates[x])[1]) for idx, x in enumerate(idcs)]

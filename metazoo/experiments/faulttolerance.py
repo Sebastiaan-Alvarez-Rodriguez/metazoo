@@ -10,6 +10,11 @@ import util.location as loc
 from util.printer import *
 import util.time as tm
 
+
+def get_experiment():
+    '''Pass your defined experiment class in this function so MetaZoo can find it'''
+    return FaultToleranceExperiment
+
 class FaultToleranceExperiment(ExperimentInterface):
     '''
     Experiment measuring operations per 0.3 second of saturated servers
