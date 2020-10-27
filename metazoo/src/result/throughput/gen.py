@@ -37,13 +37,19 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
         numbers = ['3', '5', '7', '9', '13']
         linestyles = ('solid', 'dashed', 'dotted', (0, (1,1)), 'dashdot')
         for server, color, i, linestyle in zip(servers, colors, numbers, linestyles):
-            ax.plot([x for x,_ in server], [x/seconds for _, x in server], color=color, linestyle=linestyle, label='{} servers'.format(i))
+            ax.plot([int(x) for x,_ in server], [x/seconds for _, x in server], color=color, linestyle=linestyle, label='{} servers'.format(i))
         prop = {}
         if large:
             prop = {'size': 20}
         ax.set_ylim([0,400000])
         ax.legend(loc='upper left', prop=prop, frameon=False)
         ax.set(xlabel='Read Ratio', ylabel='Operations per Second', title='Throughput')
+        xticks = [int(x) for x,_ in servers[0]]
+        ticks_pos = xticks
+        plt.xticks(ticks_pos, xticks)
+
+        if large:
+            fig.set_size_inches(12, 8)
 
     else:  
         assembler = Assembler(path)
@@ -71,8 +77,8 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
         
         ax.set(yscale='log', xlabel='Read Ratio', ylabel='Operations per Second', title='Throughput')
 
-    if large:
-        fig.set_size_inches(10, 8)
+        if large:
+            fig.set_size_inches(10, 8)
 
     fig.tight_layout()
 

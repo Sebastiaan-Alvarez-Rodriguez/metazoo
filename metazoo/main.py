@@ -154,7 +154,9 @@ def export(full_exp=False):
             loc.get_remote_metazoo_parent_dir(),
             '--exclude .git',
             '--exclude __pycache__',
-            '--exclude zookeeper-client')
+            '--exclude zookeeper-client', 
+            '--exclude results', 
+            '--exclude graphs')
         if not clean():
             printe('Cleaning failed')
             return False
