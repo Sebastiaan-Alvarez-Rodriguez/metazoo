@@ -153,7 +153,7 @@ class Experiment(object):
         self._metazoo.clean()
 
 
-# Loads an experiment in the node stage
+# Loads an experiment in the node stage and returns it
 def load_experiment(timestamp, location):
     module = imp.import_full_path(location)
     try:
@@ -169,7 +169,6 @@ def get_experiments(timestamp):
     for item in fs.ls(loc.get_metazoo_experiment_dir(), full_paths=True, only_files=True):
         if item.endswith(fs.join(fs.sep(), 'interface.py')) or not item.endswith('.py'):
             continue
-
         try:
             module = imp.import_full_path(item)
             candidates.append((item, module.get_experiment(),))
@@ -182,5 +181,4 @@ def get_experiments(timestamp):
         return [Experiment(timestamp, candidates[0][0], candidates[0][1])]
     else:
         idcs = ui.ask_pick_multiple('Multiple suitable experiments found. Please pick experiments:', [x[0] for x in candidates])
-        print('You picked: {}'.format(idcs))
         return [Experiment(timestamp+'_'+str(idx), (candidates[x])[0], (candidates[x])[1]) for idx, x in enumerate(idcs)]

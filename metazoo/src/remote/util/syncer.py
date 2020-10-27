@@ -42,7 +42,7 @@ class Syncer(object):
                         connected = True
                         break
                     except OSError as e:
-                        if e.errno == 98:
+                        if e.errno == 98: # Port is in use, try next port
                             self.port += 1
                             break
                         if x == 0:
@@ -60,11 +60,17 @@ class Syncer(object):
                 connection, address = self.serversock.accept()
                 self.connections.append(connection)
             if self.debug_mode: print('PRIME Got all {} connections'.format(self.expected_connections), flush=True)
-        else: #Others open a socket to server 0
-            while not fs.isfile(loc.get_metazoo_experiment_dir(), '.port.txt'):
+        else: #Others open a socket to prime
+            while not fs.isfile(loc.get_metazoo_experiment_dir(), '.port.txt'): # Wait until prime tells us which port to use
                 time.sleep(5)
             with open(fs.join(loc.get_metazoo_experiment_dir(), '.port.txt'), 'r') as file:
-                self.port = int(file.readlines()[0])
+                while True:
+                    try:
+                        self.port = int(file.readlines()[0])
+                        break
+                    except Exception as e:
+                        time.sleep(1)
+                        pass
             if self.designation == 'client':
                 addr = (config.hosts[0].split(':')[0], self.port)
             else:

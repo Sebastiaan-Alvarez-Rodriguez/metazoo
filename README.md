@@ -56,5 +56,19 @@ python3 <project root>/metazoo/main.py -h
 to see all options.
 
 
+### Building your own experiment
+One of the main features of MetaZoo is to define and run your own experiments.
+To do this, you, as a programmer, have to create a class extending `ExperimentInterface`, found in [metazoo/experiments/inferface.py](metazoo/experiments/inferface.py).
+A simple but complete example can be found in [metazoo/experiments/examples/example_simple.py](metazoo/experiments/examples/example_simple.py).  
+
+Once you have defined an experiment, place a `.py` file in `metazoo/experiments/`, with a function:
+```python
+def get_experiment():
+    return MyExperimentClass
+```
+This should return your defined experiment class.
+This is all that is needed to define experiments. Happy experimenting!
+
+
 ## Project
 Project description and status can be found [here](PROJECT.md)
