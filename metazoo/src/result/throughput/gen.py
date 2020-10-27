@@ -44,6 +44,7 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
         prop = {}
         if large:
             prop = {'size': 20}
+            
         ax.set_ylim([0,400000])
         ax.legend(loc='upper left', prop=prop, frameon=False)
         ax.set(xlabel='Read Ratio', ylabel='Operations per Second', title='Throughput')
