@@ -61,22 +61,22 @@ Experiments picked: **Failures** and **Latency**.
 |Latency|Least trustworthy and boldest statements|Latency is used most often to test these systems, so having good experiments is essential| Authors used own benchmark, they compare with other benchmark. No information on Chubby. They assumed every worker is equal in speed. No repetitions. No statistical methods. | Find a good benchmark or use the one for Chubby. Run the Chubby experiment on our own under same circumstances as ZooKeeper. 'Average' throughput per worker (with stdev and/or percentiles). Repeat experiment [20-100] times. |
 
 ## STEP 3
- - [ ] Run the two experiments in DAS-5. 
-    <!--- [ ] Develop scripts to allocate and de-allocate nodes, -->
+ - [X] Run the two experiments in DAS-5. 
+    <!--- [X] Develop scripts to allocate and de-allocate nodes, -->
     1. Write script to allocate nodes with preserve
     2. Write script which fetches ip adresses for allocated nodes (e.g. ip adress of 'node112')
     3. Think of a way to install zookeeper on nodes
     4. Think of a way to tell zookeeper instances were the other instances live
-    <!--- [ ] develop scripts to run your experiments on the allocated nodes. -->
-    - [ ] Run the two experiments in two ways: 
-        - [ ] (1) as the original authors described them; 
-        - [ ] (2) as you describe at point 2). (In case you would not change the design of the experiments, you do not need to run the 2nd experiment.) 
- - [ ] Write in your report the choice of parameters for the experiments and how you designed your deployment and running scripts.
+    <!--- [X] develop scripts to run your experiments on the allocated nodes. -->
+    - [X] Run the two experiments in two ways: 
+        - [X] (1) as the original authors described them; 
+        - [X] (2) as you describe at point 2). (In case you would not change the design of the experiments, you do not need to run the 2nd experiment.) 
+ - [X] Write in your report the choice of parameters for the experiments and how you designed your deployment and running scripts.
 
 ## STEP 4
- - [ ] Analyze the results you achieved. 
- - [ ] Write in your report whether the results you achieved are different to those of the authors and explain why. 
- - [ ] Draw graphs showing your results. (NB: similar results do not mean exactly matching the numbers the authors show, this is impossible, as the hardware is different. However, similar results mean similar trends, e.g., “system X is faster than system Y”, “system A is scaling linearly”.)
+ - [X] Analyze the results you achieved. 
+ - [X] Write in your report whether the results you achieved are different to those of the authors and explain why. 
+ - [X] Draw graphs showing your results. (NB: similar results do not mean exactly matching the numbers the authors show, this is impossible, as the hardware is different. However, similar results mean similar trends, e.g., “system X is faster than system Y”, “system A is scaling linearly”.)
 
 ## STEP 5
  - [ ] Pack all your code and report (in pdf format) into a tarball, and upload it to Brightspace
