@@ -7,6 +7,11 @@ from experiments.interface import ExperimentInterface
 from util.printer import *
 
 
+
+def get_experiment():
+    '''Pass your defined experiment class in this function so MetaZoo can find it'''
+    return ExampleExperiment
+
 class ExampleExperiment(ExperimentInterface):
     '''
     A most useful experiment.

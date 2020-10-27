@@ -25,8 +25,8 @@ class Color(Enum):
     CLR = '\033[0m'
 
 # Print given text with given color
-def printc(string, color, end='\n'):
-    print(format(string, color), end=end)
+def printc(string, color, **kwargs):
+    print(format(string, color), **kwargs)
 
 # Print given success text
 def prints(string, color=Color.GRN, **kwargs):
