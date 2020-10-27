@@ -1,5 +1,8 @@
 import abc
 
+def get_experiment():
+    '''Implement this function in your experiment, make it return your experiment class'''
+    return FaultToleranceExperiment
 
 class ExperimentInterface(metaclass=abc.ABCMeta):
     '''
