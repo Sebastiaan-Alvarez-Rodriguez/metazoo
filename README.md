@@ -70,5 +70,16 @@ This should return your defined experiment class.
 This is all that is needed to define experiments. Happy experimenting!
 
 
+### Compiling a Client
+We leave the definition and implementaion of clients up to the user.
+For the implementations we wrote for our own experiments,
+we created clients using IntelliJ IDEA community edition 2020.2.3, in [zookeeper-client](zookeeper-client/).
+Just open it with IDEA and build the `.jar` artifact if you want.  
+
+Our `.jar`s are completely platform-independent, so we provided them in [metazoo/deps/](metazoo/deps/), so you don't have to compile them yourself. 
+
+A general word of advice: Always compile your artifacts against *our* `zookeeper.jar`, and not on a Zookeeper version found on Maven.
+After all, your client will run with our Zookeeper implementation, not with one found on Maven.
+
 ## Project
 Project description and status can be found [here](PROJECT.md)
