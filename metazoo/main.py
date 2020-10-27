@@ -6,6 +6,7 @@
 import argparse
 import os
 import sys
+import time
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'src'))
 import dynamic.experiment as exp
@@ -89,9 +90,6 @@ def _exec_internal_server(debug_mode=False):
 # Handles execution on the remote main node, before booting the cluster
 def exec(repeats, force_comp=False, debug_mode=False):
     print('Connected!')
-    if not fs.isdir(loc.get_remote_metazoo_dir()):
-        printe('Missing project on remote. Did you run "{} --init"?'.format(sys.argv[0]))
-        return False
     if (force_comp or not is_compiled()):
         if not compile():
             printe('Could not compile!')
@@ -99,50 +97,64 @@ def exec(repeats, force_comp=False, debug_mode=False):
     elif is_compiled():
         print('Skipping compilation: Already compiled!')
 
-    timestamp = tm.ask_timestamp()
-    experiment = exp.get_experiment(timestamp)
-    
-    time_to_reserve = ui.ask_time('''
+    experiments = exp.get_experiments(tm.ask_timestamp())
+    print('Imported {} experiments'.format(len(experiments)))
+
+    if len(experiments) == 1:
+        time_to_reserve = ui.ask_time('''
 How much time to reserve on the cluster for {} {}?
 Note: Prefer reserving more time over getting timeouts.
 '''.format(repeats, 'repeat' if repeats == 1 else 'repeats'))
-
-    # Constructs result and log directories
-    for x in range(repeats):
-        fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x) 
-        fs.mkdir(loc.get_metazoo_results_dir(), timestamp, x, 'experiment_logs')
-
-    
-    experiment.pre_experiment(repeats)
-
-    # Remove stale dirs from previous runs
-    fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
-    fs.mkdir(loc.get_remote_crawlspace_dir())
-    fs.rm(loc.get_cfg_dir(), '.metazoo.cfg', ignore_errors=True)
-
-    # Build commands to boot the experiment
-    aff_server = experiment.servers_core_affinity
-    nodes_server = experiment.num_servers // aff_server
-    command_server = 'prun -np {} -{} -t {} python3 {} --exec_internal_server {}'.format(nodes_server, aff_server, time_to_reserve, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
-    aff_client = experiment.clients_core_affinity
-    nodes_client = experiment.num_clients // aff_client
-    command_client = 'prun -np {} -{} -t {} python3 {} --exec_internal_client {}'.format(nodes_client, aff_client, time_to_reserve, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
-
-    print('Booting network...')
-    server_exec = Executor(command_server)
-    client_exec = Executor(command_client)
-
-    Executor.run_all(server_exec, client_exec, shell=True)
-    status = Executor.wait_all(server_exec, client_exec)
-
-    experiment.post_experiment()
-    experiment.clean()
-
-    if status:
-        prints('Experiment complete!')
     else:
-        printe('Experiment had errors!')
-    return status
+        time_to_reserve = ui.ask_time('''
+How much time to reserve on the cluster
+for every single {} {} individually, for {} {}?
+E.g. If you reply "10:00", each experiment gets 10 minutes. 
+Note: Prefer reserving more time over getting timeouts.
+'''.format(
+    len(experiments), 'experiment' if len(experiments) == 1 else 'experiments',
+    repeats, 'repeat' if repeats == 1 else 'repeats'))
+
+    global_status = True
+    for idx, experiment in enumerate(experiments):
+        # Constructs result and log directories
+        for x in range(repeats):
+            fs.mkdir(loc.get_metazoo_results_dir(), experiment.timestamp, x) 
+            fs.mkdir(loc.get_metazoo_results_dir(), experiment.timestamp, x, 'experiment_logs')
+
+        
+        experiment.pre_experiment(repeats)
+
+        # Remove stale dirs from previous runs
+        fs.rm(loc.get_remote_crawlspace_dir(), ignore_errors=True)
+        fs.mkdir(loc.get_remote_crawlspace_dir())
+        fs.rm(loc.get_cfg_dir(), '.metazoo.cfg', ignore_errors=True)
+        fs.rm(loc.get_metazoo_experiment_dir(), '.port.txt', ignore_errors=True)
+        
+        # Build commands to boot the experiment
+        aff_server = experiment.servers_core_affinity
+        nodes_server = experiment.num_servers // aff_server
+        command_server = 'prun -np {} -{} -t {} python3 {} --exec_internal_server {}'.format(nodes_server, aff_server, time_to_reserve, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
+        aff_client = experiment.clients_core_affinity
+        nodes_client = experiment.num_clients // aff_client
+        command_client = 'prun -np {} -{} -t {} python3 {} --exec_internal_client {}'.format(nodes_client, aff_client, time_to_reserve, fs.join(fs.abspath(), 'main.py'), '-d' if debug_mode else '')
+
+        print('Booting network...')
+        server_exec = Executor(command_server)
+        client_exec = Executor(command_client)
+
+        Executor.run_all(server_exec, client_exec, shell=True)
+        status = Executor.wait_all(server_exec, client_exec)
+
+        experiment.post_experiment()
+        experiment.clean()
+        time.sleep(5)
+        if status:
+            printc('Experiment {}/{} complete!'.format(idx+1, len(experiments)), Color.PRP)
+        else:
+            printe('Experiment {}/{} had errors!'.format(idx+1, len(experiments)))
+        global_status &= status
+    return global_status
 
 # Handles export commandline argument
 def export(full_exp=False):
@@ -168,6 +180,8 @@ def export(full_exp=False):
             loc.get_remote_parent_dir(),
             '--exclude zookeeper-release-3.3.0',
             '--exclude zookeeper-client',
+            '--exclude results',
+            '--exclude graphs',
             '--exclude deps',
             '--exclude .git',
             '--exclude __pycache__')

@@ -41,7 +41,7 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
         prop = {}
         if large:
             prop = {'size': 20}
-        ax.set_ylim([0,400000])
+        #ax.set_ylim([0,400000])
         ax.legend(loc='upper left', prop=prop, frameon=False)
         ax.set(xlabel='Read Ratio', ylabel='Operations per Second', title='Throughput')
         xticks = [int(x) for x,_ in servers[0]]
@@ -73,7 +73,7 @@ def throughput(logdir, large, no_show, store_fig, filetype, original):
         plt.setp(bplot['boxes'], color='lightgreen')
         plt.setp(bplot['boxes'], edgecolor='black')
         plt.setp(bplot['medians'], color='forestgreen')
-        plt.xticks(np.arange(len(ticks)+1), labels=ticks)
+        plt.xticks(np.arange(len(ticks)), labels=ticks)
         
         ax.set(yscale='log', xlabel='Read Ratio', ylabel='Operations per Second', title='Throughput')
 

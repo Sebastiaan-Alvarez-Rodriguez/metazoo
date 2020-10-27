@@ -32,17 +32,26 @@ class Syncer(object):
         # Server 0 opens socket to listen
         if self.prime:
             self.serversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            serveraddr = (socket.gethostname(), 5000)
-            for x in range(retries):
-                try:
-                    self.serversock.bind(serveraddr)
-                    break
-                except OSError as e:
-                    if x == 0:
-                        printw('[SYNC] PRIME {}.{} cannot host from address {} (connection refused). Retrying...'.format(designation.upper(), self.gid, serveraddr))
-                    elif x == retries-1:
-                        raise e
-                    time.sleep(1)
+            self.port = 2000
+            connected = False
+            while not connected:
+                serveraddr = (socket.gethostname(), self.port)
+                for x in range(retries):
+                    try:
+                        self.serversock.bind(serveraddr)
+                        connected = True
+                        break
+                    except OSError as e:
+                        if e.errno == 98:
+                            self.port += 1
+                            break
+                        if x == 0:
+                            printw('[SYNC] PRIME {}.{} cannot host from address {} (connection refused). Retrying...'.format(designation.upper(), self.gid, serveraddr))
+                        elif x == retries-1:
+                            raise e
+            prints('Prime hosting from {}:{}'.format(socket.gethostname(), self.port))
+            with open(fs.join(loc.get_metazoo_experiment_dir(), '.port.txt'), 'w') as file:
+                file.write(str(self.port))
             self.serversock.listen(1070) #Get up to 1070 connections before refusing them
             self.expected_connections = experiment.num_servers-1+experiment.num_clients
             self.connections = []
@@ -52,11 +61,14 @@ class Syncer(object):
                 self.connections.append(connection)
             if self.debug_mode: print('PRIME Got all {} connections'.format(self.expected_connections), flush=True)
         else: #Others open a socket to server 0
-            time.sleep(5) #Give prime a head start
+            while not fs.isfile(loc.get_metazoo_experiment_dir(), '.port.txt'):
+                time.sleep(5)
+            with open(fs.join(loc.get_metazoo_experiment_dir(), '.port.txt'), 'r') as file:
+                self.port = int(file.readlines()[0])
             if self.designation == 'client':
-                addr = (config.hosts[0].split(':')[0], 5000)
+                addr = (config.hosts[0].split(':')[0], self.port)
             else:
-                addr = ('node{:03d}'.format(config.nodes[0]), 5000)
+                addr = ('node{:03d}'.format(config.nodes[0]), self.port)
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.debug_mode: print('{}.{} CONNECTING TO addr: {}'.format(self.designation, self.gid, addr), flush=True)
             for x in range(retries):
@@ -107,5 +119,6 @@ class Syncer(object):
             # Quickly close connections and be done with it
             for conn in self.connections:
                 conn.close()
+            fs.rm(loc.get_metazoo_experiment_dir(), '.port.txt')
         else:
             self.sock.close()
